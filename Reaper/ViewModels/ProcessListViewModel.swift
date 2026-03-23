@@ -8,6 +8,10 @@ final class ProcessListViewModel: ObservableObject {
     @Published var sortOrder: SortOrder = .cpu
     @Published var systemStats = SystemStats()
     @Published var expandedGroups: Set<pid_t> = []
+    @Published var cpuHistory: [Double] = []
+    @Published var memoryHistory: [Double] = []
+
+    private let historySize = 20
 
     private let monitor = ProcessMonitor()
     private var timer: Timer?
@@ -38,6 +42,16 @@ final class ProcessListViewModel: ObservableObject {
     func refresh() {
         let processes = monitor.refresh()
         systemStats = SystemStats.current()
+
+        // Update history
+        cpuHistory.append(systemStats.totalCPU)
+        if cpuHistory.count > historySize { cpuHistory.removeFirst() }
+
+        let memPercent = systemStats.totalMemory > 0
+            ? Double(systemStats.usedMemory) / Double(systemStats.totalMemory) * 100.0
+            : 0
+        memoryHistory.append(memPercent)
+        if memoryHistory.count > historySize { memoryHistory.removeFirst() }
 
         var grouped = buildGroups(from: processes)
         grouped = applySearch(to: grouped)

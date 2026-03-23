@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
+    @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -9,6 +10,19 @@ struct SettingsView: View {
                 .font(.system(size: 13, weight: .semibold))
 
             Divider()
+
+            HStack {
+                Text("Menu bar shows")
+                    .font(.system(size: 12))
+                Spacer()
+                Picker("", selection: $menuBarMetric) {
+                    ForEach(MenuBarMetric.allCases) { metric in
+                        Text(metric.rawValue).tag(metric.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 130)
+            }
 
             HStack {
                 Text("Refresh interval")

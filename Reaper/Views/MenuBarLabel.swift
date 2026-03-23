@@ -10,16 +10,21 @@ enum MenuBarMetric: String, CaseIterable, Identifiable {
 struct MenuBarLabel: View {
     let stats: SystemStats
     let metric: MenuBarMetric
-    let history: [Double]
 
-    // Unicode block elements: ▁▂▃▄▅▆▇█
-    private static let blocks: [Character] = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+    private var fillPercent: Double {
+        switch metric {
+        case .cpu:
+            return min(1.0, max(0.0, stats.totalCPU / 100.0))
+        case .memory:
+            guard stats.totalMemory > 0 else { return 0 }
+            return min(1.0, Double(stats.usedMemory) / Double(stats.totalMemory))
+        }
+    }
 
     var body: some View {
         HStack(spacing: 4) {
-            Text(sparkline)
-                .font(.system(size: 10))
-                .baselineOffset(-1)
+            Image(systemName: "chart.bar.fill", variableValue: fillPercent)
+                .font(.system(size: 14))
 
             switch metric {
             case .memory:
@@ -32,21 +37,5 @@ struct MenuBarLabel: View {
                     .monospacedDigit()
             }
         }
-    }
-
-    private var sparkline: String {
-        let count = 12
-        let samples: [Double]
-        if history.count >= count {
-            samples = Array(history.suffix(count))
-        } else {
-            samples = Array(repeating: 0.0, count: count - history.count) + history
-        }
-
-        return String(samples.map { value in
-            let normalized = min(1.0, max(0.0, value / 100.0))
-            let index = Int(normalized * Double(Self.blocks.count - 1))
-            return Self.blocks[min(index, Self.blocks.count - 1)]
-        })
     }
 }

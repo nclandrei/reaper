@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reaper Icon Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px; background: #1a1a1a; color: #fff; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .subtitle { color: #888; margin-bottom: 40px; font-size: 14px; }
+  .row { display: flex; gap: 40px; margin-bottom: 48px; }
+  .card {
+    padding: 32px;
+    border-radius: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .card.light { background: #f5f5f7; }
+  .card.dark { background: #0d0d1a; border: 1px solid #222; }
+  .card h2 { font-size: 14px; font-weight: 500; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
+  .sizes { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .size-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .size-item img {
+    border-radius: 22%;
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.15); */
+  }
+  .size-label { font-size: 11px; color: #666; font-variant-numeric: tabular-nums; }
+  .variant-row { display: flex; gap: 40px; margin-bottom: 32px; }
+  .variant-card {
+    padding: 24px;
+    border-radius: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .variant-card.on-white { background: #fff; }
+  .variant-card.on-dark { background: #000; }
+  .variant-card h3 { font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <h1>Reaper — Icon Preview</h1>
+  <p class="subtitle">Full-color icon on light and dark surfaces at multiple sizes</p>
+
+  <div class="row">
+    <div class="card light">
+      <h2>Light Surface</h2>
+      <div class="sizes">
+        <div class="size-item"><img src="reaper-icon.svg" width="256" height="256"><span class="size-label">256</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="128" height="128"><span class="size-label">128</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="64" height="64"><span class="size-label">64</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="32" height="32"><span class="size-label">32</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="24" height="24"><span class="size-label">24</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="16" height="16"><span class="size-label">16</span></div>
+      </div>
+    </div>
+    <div class="card dark">
+      <h2>Dark Surface</h2>
+      <div class="sizes">
+        <div class="size-item"><img src="reaper-icon.svg" width="256" height="256"><span class="size-label">256</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="128" height="128"><span class="size-label">128</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="64" height="64"><span class="size-label">64</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="32" height="32"><span class="size-label">32</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="24" height="24"><span class="size-label">24</span></div>
+        <div class="size-item"><img src="reaper-icon.svg" width="16" height="16"><span class="size-label">16</span></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="subtitle">Monochrome variants</p>
+  <div class="variant-row">
+    <div class="variant-card on-white">
+      <h3>Black on White</h3>
+      <img src="reaper-icon-black.svg" width="128" height="128">
+    </div>
+    <div class="variant-card on-dark">
+      <h3>White on Black</h3>
+      <img src="reaper-icon-white.svg" width="128" height="128">
+    </div>
+  </div>
+</body>
+</html>

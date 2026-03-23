@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Scythe shaft -->
+  <path d="M 680 780 Q 620 620 560 500 Q 500 380 460 280 Q 440 230 430 200"
+        stroke="#000000" stroke-width="36" stroke-linecap="round" fill="none"/>
+  <!-- Scythe blade -->
+  <path d="M 430 200 Q 410 170 370 155 Q 280 125 210 180 Q 160 220 150 290 Q 145 340 180 380 Q 220 420 300 400 Q 370 380 420 320 Q 450 280 440 230 Q 436 212 430 200 Z"
+        fill="#000000"/>
+</svg>

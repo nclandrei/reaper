@@ -1,0 +1,106 @@
+import Foundation
+import AppKit
+
+final class ProcessMonitor {
+    private var previousSamples: [pid_t: (cpuTime: UInt64, timestamp: TimeInterval)] = [:]
+
+    func refresh() -> [ProcessInfo] {
+        let uid = getuid()
+        let rawProcs = enumerateProcesses(uid: uid)
+        let now = Date().timeIntervalSince1970
+        let runningApps = NSWorkspace.shared.runningApplications
+        let appsByPID = Dictionary(
+            runningApps.map { ($0.processIdentifier, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        var result: [ProcessInfo] = []
+
+        for raw in rawProcs {
+            let cpuTime = raw.cpuUser + raw.cpuSystem
+            var cpuPercent = 0.0
+
+            if let prev = previousSamples[raw.pid] {
+                let dt = now - prev.timestamp
+                if dt > 0 {
+                    let delta = cpuTime >= prev.cpuTime ? cpuTime - prev.cpuTime : 0
+                    cpuPercent = (Double(delta) / 1_000_000_000.0) / dt * 100.0
+                    cpuPercent = max(0, min(cpuPercent, 10000))
+                }
+            }
+
+            previousSamples[raw.pid] = (cpuTime, now)
+
+            let app = appsByPID[raw.pid]
+            let isApp = app?.activationPolicy == .regular
+
+            result.append(ProcessInfo(
+                pid: raw.pid,
+                name: app?.localizedName ?? raw.name,
+                cpu: cpuPercent,
+                memory: raw.memory,
+                icon: app?.icon,
+                isApp: isApp,
+                parentPID: raw.parentPID,
+                bundleIdentifier: app?.bundleIdentifier
+            ))
+        }
+
+        let activePIDs = Set(rawProcs.map(\.pid))
+        previousSamples = previousSamples.filter { activePIDs.contains($0.key) }
+
+        return result
+    }
+
+    // MARK: - Private
+
+    private struct RawProcess {
+        let pid: pid_t
+        let parentPID: pid_t
+        let name: String
+        let cpuUser: UInt64
+        let cpuSystem: UInt64
+        let memory: UInt64
+    }
+
+    private func enumerateProcesses(uid: uid_t) -> [RawProcess] {
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_UID, Int32(uid)]
+        var size = 0
+        guard sysctl(&mib, 4, nil, &size, nil, 0) == 0, size > 0 else { return [] }
+
+        let count = size / MemoryLayout<kinfo_proc>.stride
+        var kprocs = [kinfo_proc](repeating: kinfo_proc(), count: count)
+        guard sysctl(&mib, 4, &kprocs, &size, nil, 0) == 0 else { return [] }
+
+        let actual = size / MemoryLayout<kinfo_proc>.stride
+        var results: [RawProcess] = []
+        results.reserveCapacity(actual)
+
+        for i in 0..<actual {
+            let kp = kprocs[i]
+            let pid = kp.kp_proc.p_pid
+            guard pid > 0 else { continue }
+
+            var nameBuffer = [CChar](repeating: 0, count: 256)
+            proc_name(pid, &nameBuffer, 256)
+            let name = String(cString: nameBuffer)
+            guard !name.isEmpty else { continue }
+
+            var taskInfo = proc_taskinfo()
+            let infoSize = Int32(MemoryLayout<proc_taskinfo>.size)
+            let ret = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &taskInfo, infoSize)
+            guard ret == infoSize else { continue }
+
+            results.append(RawProcess(
+                pid: pid,
+                parentPID: kp.kp_eproc.e_ppid,
+                name: name,
+                cpuUser: taskInfo.pti_total_user,
+                cpuSystem: taskInfo.pti_total_system,
+                memory: taskInfo.pti_resident_size
+            ))
+        }
+
+        return results
+    }
+}

@@ -2,6 +2,7 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs: {}
   workflow_run:
     workflows: ["CI"]
     types: [completed]

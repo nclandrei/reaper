@@ -9,6 +9,9 @@ struct ProcessGroupView: View {
     let onKillGroup: () -> Void
 
     @State private var isHovering = false
+    @State private var visibleCount = 10
+
+    private let pageSize = 10
 
     var body: some View {
         VStack(spacing: 0) {
@@ -86,7 +89,10 @@ struct ProcessGroupView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .contentShape(Rectangle())
-            .onTapGesture { onToggle() }
+            .onTapGesture {
+                if isExpanded { visibleCount = pageSize }
+                onToggle()
+            }
             .onHover { isHovering = $0 }
             .contextMenu {
                 Button("Quit") { onKillGroup() }
@@ -104,17 +110,35 @@ struct ProcessGroupView: View {
                 }
             }
 
-            // Expanded children
+            // Expanded children (paginated)
             if isExpanded && group.helperCount > 0 {
                 let helpers = group.children.filter { $0.pid != group.id }
+                let visible = Array(helpers.prefix(visibleCount))
+                let remaining = helpers.count - visible.count
+
                 VStack(spacing: 0) {
-                    ForEach(helpers) { process in
+                    ForEach(visible) { process in
                         ProcessRowView(
                             process: process,
                             isHelper: true,
                             onKill: { onKill(process.pid) },
                             onForceKill: { onForceKill(process.pid) }
                         )
+                    }
+
+                    if remaining > 0 {
+                        Button {
+                            withAnimation(.easeOut(duration: 0.15)) {
+                                visibleCount += pageSize
+                            }
+                        } label: {
+                            Text("Show \(min(remaining, pageSize)) more (\(remaining) remaining)")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.leading, 20)

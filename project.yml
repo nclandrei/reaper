@@ -3,12 +3,18 @@ options:
   bundleIdPrefix: com.reaper
   deploymentTarget:
     macOS: "14.0"
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: "2.0.0"
 targets:
   Reaper:
     type: application
     platform: macOS
     sources:
       - path: Reaper
+    dependencies:
+      - package: KeyboardShortcuts
     info:
       path: Reaper/Info.plist
       properties:

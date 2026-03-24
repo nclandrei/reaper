@@ -1,35 +1,17 @@
 import AppKit
+import KeyboardShortcuts
+
+extension KeyboardShortcuts.Name {
+    static let togglePanel = Self("togglePanel", default: .init(.r, modifiers: [.option, .shift]))
+}
 
 final class HotkeyManager {
     static let shared = HotkeyManager()
 
-    private var globalMonitor: Any?
-
-    // Default: ⌥⇧R (Option+Shift+R), keyCode 15
-    private let keyCode: UInt16 = 15
-    private let modifiers: NSEvent.ModifierFlags = [.option, .shift]
-
     func register() {
-        guard globalMonitor == nil else { return }
-
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyEvent(event)
+        KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in
+            self?.togglePanel()
         }
-    }
-
-    func unregister() {
-        if let globalMonitor { NSEvent.removeMonitor(globalMonitor) }
-        globalMonitor = nil
-    }
-
-    private func handleKeyEvent(_ event: NSEvent) {
-        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        guard event.keyCode == keyCode,
-              flags.contains(.option),
-              flags.contains(.shift)
-        else { return }
-
-        togglePanel()
     }
 
     private func togglePanel() {

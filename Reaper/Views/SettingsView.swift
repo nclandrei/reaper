@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
@@ -40,6 +41,15 @@ struct SettingsView: View {
                 .frame(width: 140)
             }
 
+            // Hotkey recorder
+            HStack {
+                Text("Hotkey")
+                    .font(.system(size: 12))
+                Spacer()
+                KeyboardShortcuts.Recorder(for: .togglePanel)
+                    .frame(width: 140)
+            }
+
             // Refresh interval
             HStack {
                 Text("Refresh interval")
@@ -56,15 +66,6 @@ struct SettingsView: View {
                 .onChange(of: viewModel.refreshInterval) { _ in
                     viewModel.saveRefreshInterval()
                 }
-            }
-
-            HStack {
-                Text("Hotkey")
-                    .font(.system(size: 12))
-                Spacer()
-                Text("⌥⇧R")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.secondary)
             }
 
             Toggle("Launch at login", isOn: Binding(

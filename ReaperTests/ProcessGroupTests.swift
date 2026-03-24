@@ -12,7 +12,8 @@ final class ProcessGroupTests: XCTestCase {
             icon: nil,
             isApp: false,
             parentPID: 0,
-            bundleIdentifier: nil
+            bundleIdentifier: nil,
+            path: nil
         )
     }
 

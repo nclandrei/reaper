@@ -170,7 +170,7 @@ final class ProcessListViewModel: ObservableObject {
             if group.name.lowercased().contains(query) {
                 return group
             }
-            let matched = group.children.filter { $0.name.lowercased().contains(query) }
+            let matched = group.children.filter { $0.matchesSearch(query) }
             guard !matched.isEmpty else { return nil }
             var g = group
             g.children = matched

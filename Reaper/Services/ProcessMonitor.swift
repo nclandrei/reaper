@@ -34,6 +34,8 @@ final class ProcessMonitor {
             let app = appsByPID[raw.pid]
             let isApp = app?.activationPolicy == .regular
 
+            let processPath = app != nil ? nil : executablePath(for: raw.pid)
+
             result.append(ProcessInfo(
                 pid: raw.pid,
                 name: app?.localizedName ?? raw.name,
@@ -42,7 +44,8 @@ final class ProcessMonitor {
                 icon: app?.icon,
                 isApp: isApp,
                 parentPID: raw.parentPID,
-                bundleIdentifier: app?.bundleIdentifier
+                bundleIdentifier: app?.bundleIdentifier,
+                path: processPath
             ))
         }
 
@@ -53,6 +56,45 @@ final class ProcessMonitor {
     }
 
     // MARK: - Private
+
+    /// Returns the executable path and arguments for a process using KERN_PROCARGS2.
+    /// This is the same approach Activity Monitor uses to show full command info.
+    private func executablePath(for pid: pid_t) -> String? {
+        var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+        var size = 0
+        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > 0 else { return nil }
+
+        var buffer = [UInt8](repeating: 0, count: size)
+        guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0, size > 4 else { return nil }
+
+        // First 4 bytes: argc
+        let argc = buffer.withUnsafeBufferPointer {
+            $0.baseAddress!.withMemoryRebound(to: Int32.self, capacity: 1) { $0.pointee }
+        }
+
+        // After argc: null-terminated exec_path, then padding nulls, then argv[0..argc-1]
+        var offset = 4
+
+        // Skip exec_path
+        while offset < size && buffer[offset] != 0 { offset += 1 }
+        // Skip trailing nulls
+        while offset < size && buffer[offset] == 0 { offset += 1 }
+
+        // Collect up to argc args (but cap at 4 to avoid huge strings)
+        var args: [String] = []
+        let maxArgs = min(Int(argc), 4)
+        for _ in 0..<maxArgs {
+            guard offset < size else { break }
+            let start = offset
+            while offset < size && buffer[offset] != 0 { offset += 1 }
+            if let arg = String(bytes: buffer[start..<offset], encoding: .utf8) {
+                args.append(arg)
+            }
+            offset += 1 // skip null
+        }
+
+        return args.isEmpty ? nil : args.joined(separator: " ")
+    }
 
     private struct RawProcess {
         let pid: pid_t

@@ -1,0 +1,91 @@
+<svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Dark gradient background -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1c1c30;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a14;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Mask for negative space cutout: power symbol -->
+    <mask id="powerMask">
+      <!-- White base (visible) -->
+      <rect width="1024" height="1024" fill="white" />
+
+      <!-- Black cutouts (invisible) forming power symbol -->
+      <!-- Vertical stem of power symbol -->
+      <rect x="468" y="180" width="88" height="360" fill="black" />
+
+      <!-- Top curved arc (implied through geometric cutout) -->
+      <!-- Left arc segment -->
+      <rect x="280" y="200" width="120" height="80" fill="black" rx="40" />
+
+      <!-- Right arc segment -->
+      <rect x="624" y="200" width="120" height="80" fill="black" rx="40" />
+
+      <!-- Left upper diagonal -->
+      <rect x="240" y="280" width="100" height="60" fill="black" transform="rotate(-35 290 310)" />
+
+      <!-- Right upper diagonal -->
+      <rect x="684" y="280" width="100" height="60" fill="black" transform="rotate(35 734 310)" />
+    </mask>
+
+    <!-- Alternative mask: X inside circle (kill symbol) -->
+    <mask id="killMask">
+      <!-- White base (visible) -->
+      <rect width="1024" height="1024" fill="white" />
+
+      <!-- Black cutout: large circle in center -->
+      <circle cx="512" cy="512" r="340" fill="black" />
+
+      <!-- Black cutout: X pattern inside (thick lines) -->
+      <!-- Top-left to bottom-right diagonal -->
+      <rect x="280" y="280" width="480" height="100" fill="black" transform="rotate(45 512 512)" />
+
+      <!-- Top-right to bottom-left diagonal -->
+      <rect x="280" y="280" width="480" height="100" fill="black" transform="rotate(-45 512 512)" />
+    </mask>
+
+    <!-- Shield/power mask: rounded square with power button carved out -->
+    <mask id="shieldPowerMask">
+      <!-- White base (visible) -->
+      <rect width="1024" height="1024" fill="white" />
+
+      <!-- Black cutout: rounded square border -->
+      <rect x="150" y="150" width="724" height="724" rx="160" ry="160" fill="black" />
+
+      <!-- Black cutout: power button symbol in center -->
+      <!-- Vertical line of power symbol -->
+      <rect x="468" y="280" width="88" height="320" fill="black" />
+
+      <!-- Top arc of power symbol (curved using multiple segments) -->
+      <circle cx="360" cy="380" r="85" fill="black" />
+      <circle cx="664" cy="380" r="85" fill="black" />
+
+      <!-- Connect the arcs -->
+      <rect x="300" y="310" width="424" height="140" fill="black" />
+    </mask>
+  </defs>
+
+  <!-- Dark rounded background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="url(#bgGradient)" />
+
+  <!-- Primary logo: Shield with power button (negative space) -->
+  <g>
+    <!-- Crimson shape with power mask applied -->
+    <rect x="0" y="0" width="1024" height="1024" fill="#dc2844" mask="url(#shieldPowerMask)" />
+  </g>
+
+  <!-- Subtle inner shadow/glow effect -->
+  <defs>
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Optional: subtle border highlight for definition -->
+  <rect x="150" y="150" width="724" height="724" rx="160" ry="160" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.15" />
+</svg>

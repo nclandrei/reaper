@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reaper — Menu Bar Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 40px;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 40px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .option {
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 24px;
+    background: #12121f;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .option:hover { border-color: #556; }
+  .option-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #aab;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .option-desc {
+    font-size: 12px;
+    color: #667;
+    line-height: 1.5;
+  }
+
+  /* Simulated menu bar strip */
+  .menubar {
+    background: linear-gradient(180deg, #2a2a3a, #222233);
+    border-radius: 8px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    color: #e0e0e8;
+  }
+  .menubar.light {
+    background: linear-gradient(180deg, #e8e8f0, #d8d8e5);
+    color: #222;
+  }
+  .both-bars { display: flex; flex-direction: column; gap: 8px; }
+
+  /* === Option styles === */
+
+  /* A: Pill fill bar */
+  .pill-track {
+    width: 36px; height: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  .light .pill-track { background: rgba(0,0,0,0.1); }
+  .pill-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.85);
+  }
+  .light .pill-fill { background: rgba(0,0,0,0.55); }
+
+  /* B: Segmented blocks */
+  .segments {
+    display: flex; gap: 2px; align-items: center;
+  }
+  .seg {
+    width: 4px; height: 10px;
+    border-radius: 1px;
+    background: rgba(255,255,255,0.15);
+  }
+  .light .seg { background: rgba(0,0,0,0.1); }
+  .seg.on { background: rgba(255,255,255,0.85); }
+  .light .seg.on { background: rgba(0,0,0,0.55); }
+
+  /* C: Thin line bar */
+  .line-track {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .light .line-track { background: rgba(0,0,0,0.1); }
+  .line-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.85);
+  }
+  .light .line-fill { background: rgba(0,0,0,0.55); }
+
+  /* D: Ring/arc gauge */
+  .ring {
+    width: 16px; height: 16px;
+    position: relative;
+  }
+  .ring svg { width: 16px; height: 16px; }
+  .ring-track { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 2.5; }
+  .ring-fill { fill: none; stroke: rgba(255,255,255,0.85); stroke-width: 2.5; stroke-linecap: round; }
+  .light .ring-track { stroke: rgba(0,0,0,0.1); }
+  .light .ring-fill { stroke: rgba(0,0,0,0.55); }
+
+  /* E: Battery style */
+  .battery {
+    width: 28px; height: 12px;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 3px;
+    padding: 1.5px;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
+  .light .battery { border-color: rgba(0,0,0,0.35); }
+  .battery::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 3px;
+    width: 2px;
+    height: 5px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 0 1px 1px 0;
+  }
+  .light .battery::after { background: rgba(0,0,0,0.25); }
+  .battery-fill {
+    border-radius: 1.5px;
+    background: rgba(255,255,255,0.85);
+  }
+  .light .battery-fill { background: rgba(0,0,0,0.55); }
+
+  /* F: Dot row */
+  .dots {
+    display: flex; gap: 3px; align-items: center;
+  }
+  .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .light .dot { background: rgba(0,0,0,0.1); }
+  .dot.on { background: rgba(255,255,255,0.85); }
+  .light .dot.on { background: rgba(0,0,0,0.55); }
+
+  /* G: Vertical bars (mini iStat) */
+  .vbars {
+    display: flex; gap: 1.5px; align-items: flex-end; height: 14px;
+  }
+  .vbar {
+    width: 3px;
+    border-radius: 0.5px;
+    background: rgba(255,255,255,0.85);
+    min-height: 2px;
+  }
+  .light .vbar { background: rgba(0,0,0,0.55); }
+  .vbar-ghost {
+    width: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 0.5px;
+    min-height: 2px;
+  }
+  .light .vbar-ghost { background: rgba(0,0,0,0.08); }
+
+  /* H: Stacked dual bar */
+  .dual-stack {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .dual-track {
+    width: 32px; height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .light .dual-track { background: rgba(0,0,0,0.08); }
+  .dual-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.85);
+  }
+  .light .dual-fill { background: rgba(0,0,0,0.5); }
+
+  /* I: Number only (big) */
+  .big-num {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    font-family: 'SF Mono', monospace;
+  }
+
+  .section-label {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 8px 0 16px 0;
+    color: #99a;
+  }
+</style>
+</head>
+<body>
+  <h1>Reaper — Menu Bar Indicator Options</h1>
+  <p class="sub">Each option shown on dark and light menu bars at actual menu bar size. Pick your favorite.</p>
+
+  <div class="grid">
+
+    <!-- A: Pill fill bar -->
+    <div class="option">
+      <span class="option-label">A — Pill Bar</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="pill-track"><div class="pill-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="pill-track"><div class="pill-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">What we have now but refined. Simple rounded progress bar.</span>
+    </div>
+
+    <!-- B: Segmented blocks -->
+    <div class="option">
+      <span class="option-label">B — Segments</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="segments">
+            <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div>
+            <div class="seg on"></div><div class="seg on"></div>
+            <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+            <div class="seg"></div><div class="seg"></div>
+          </div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="segments">
+            <div class="seg on"></div><div class="seg on"></div><div class="seg on"></div>
+            <div class="seg on"></div><div class="seg on"></div>
+            <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+            <div class="seg"></div><div class="seg"></div>
+          </div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">10 discrete blocks. Clear visual steps. Like a signal meter.</span>
+    </div>
+
+    <!-- C: Thin line -->
+    <div class="option">
+      <span class="option-label">C — Thin Line</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="line-track"><div class="line-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="line-track"><div class="line-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">Ultra-minimal thin progress line. Subtle, unobtrusive.</span>
+    </div>
+
+    <!-- D: Ring gauge -->
+    <div class="option">
+      <span class="option-label">D — Ring Gauge</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="ring">
+            <svg viewBox="0 0 16 16">
+              <circle class="ring-track" cx="8" cy="8" r="6"/>
+              <circle class="ring-fill" cx="8" cy="8" r="6"
+                stroke-dasharray="37.7" stroke-dashoffset="18.1"
+                transform="rotate(-90 8 8)"/>
+            </svg>
+          </div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="ring">
+            <svg viewBox="0 0 16 16">
+              <circle class="ring-track" cx="8" cy="8" r="6" style="stroke:rgba(0,0,0,0.1)"/>
+              <circle class="ring-fill" cx="8" cy="8" r="6"
+                stroke-dasharray="37.7" stroke-dashoffset="18.1"
+                transform="rotate(-90 8 8)" style="stroke:rgba(0,0,0,0.55)"/>
+            </svg>
+          </div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">Circular progress ring. Compact, modern. Like Activity Monitor's icon.</span>
+    </div>
+
+    <!-- E: Battery style -->
+    <div class="option">
+      <span class="option-label">E — Battery</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="battery"><div class="battery-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="battery"><div class="battery-fill" style="width:52%"></div></div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">Battery-shaped container with fill. Instantly readable, familiar metaphor.</span>
+    </div>
+
+    <!-- F: Dot row -->
+    <div class="option">
+      <span class="option-label">F — Dots</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="dots">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+          </div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="dots">
+            <div class="dot on"></div><div class="dot on"></div><div class="dot on"></div>
+            <div class="dot on"></div><div class="dot on"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+          </div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">10 dots, filled proportionally. Minimal, playful.</span>
+    </div>
+
+    <!-- G: Vertical bars -->
+    <div class="option">
+      <span class="option-label">G — Mini Bars</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="vbars">
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:6px"></div>
+              <div class="vbar" style="height:8px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:4px"></div>
+              <div class="vbar" style="height:10px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:7px"></div>
+              <div class="vbar" style="height:7px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:5px"></div>
+              <div class="vbar" style="height:9px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:6px"></div>
+              <div class="vbar" style="height:8px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:7px"></div>
+              <div class="vbar" style="height:7px"></div>
+            </div>
+          </div>
+          <span>16/32G</span>
+        </div>
+        <div class="menubar light">
+          <div class="vbars">
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:6px"></div>
+              <div class="vbar" style="height:8px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:4px"></div>
+              <div class="vbar" style="height:10px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:7px"></div>
+              <div class="vbar" style="height:7px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:5px"></div>
+              <div class="vbar" style="height:9px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:6px"></div>
+              <div class="vbar" style="height:8px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="vbar-ghost" style="height:7px"></div>
+              <div class="vbar" style="height:7px"></div>
+            </div>
+          </div>
+          <span>16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">iStat-style vertical bars with ghost tracks. Shows history over time.</span>
+    </div>
+
+    <!-- H: Stacked dual -->
+    <div class="option">
+      <span class="option-label">H — Dual Stack</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <div class="dual-stack">
+            <div class="dual-track"><div class="dual-fill" style="width:35%"></div></div>
+            <div class="dual-track"><div class="dual-fill" style="width:52%"></div></div>
+          </div>
+          <span style="font-size:10px; line-height:1.1">35%<br>16G</span>
+        </div>
+        <div class="menubar light">
+          <div class="dual-stack">
+            <div class="dual-track"><div class="dual-fill" style="width:35%"></div></div>
+            <div class="dual-track"><div class="dual-fill" style="width:52%"></div></div>
+          </div>
+          <span style="font-size:10px; line-height:1.1">35%<br>16G</span>
+        </div>
+      </div>
+      <span class="option-desc">CPU + Memory stacked. Both metrics at once, no switching needed.</span>
+    </div>
+
+    <!-- I: Text only -->
+    <div class="option">
+      <span class="option-label">I — Text Only</span>
+      <div class="both-bars">
+        <div class="menubar">
+          <span class="big-num">52%</span>
+          <span style="opacity:0.4">16/32G</span>
+        </div>
+        <div class="menubar light">
+          <span class="big-num">52%</span>
+          <span style="opacity:0.4">16/32G</span>
+        </div>
+      </div>
+      <span class="option-desc">No icon, just bold numbers. Most compact, both metrics inline.</span>
+    </div>
+
+  </div>
+</body>
+</html>

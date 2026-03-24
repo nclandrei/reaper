@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
+    @AppStorage("cpuStyle") private var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
+    @AppStorage("memoryStyle") private var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -11,6 +13,7 @@ struct SettingsView: View {
 
             Divider()
 
+            // Metric toggle
             HStack {
                 Text("Menu bar shows")
                     .font(.system(size: 12))
@@ -24,6 +27,20 @@ struct SettingsView: View {
                 .frame(width: 130)
             }
 
+            // Style picker for active metric
+            HStack {
+                Text(menuBarMetric == MenuBarMetric.cpu.rawValue ? "CPU indicator" : "Memory indicator")
+                    .font(.system(size: 12))
+                Spacer()
+                Picker("", selection: menuBarMetric == MenuBarMetric.cpu.rawValue ? $cpuStyle : $memoryStyle) {
+                    ForEach(MenuBarStyle.allCases) { style in
+                        Text(style.rawValue).tag(style.rawValue)
+                    }
+                }
+                .frame(width: 140)
+            }
+
+            // Refresh interval
             HStack {
                 Text("Refresh interval")
                     .font(.system(size: 12))
@@ -48,6 +65,6 @@ struct SettingsView: View {
             .font(.system(size: 12))
         }
         .padding(16)
-        .frame(width: 300)
+        .frame(width: 320)
     }
 }

@@ -8,6 +8,18 @@ packages:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: "2.0.0"
 targets:
+  ReaperTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: ReaperTests
+    dependencies:
+      - target: Reaper
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        GENERATE_INFOPLIST_FILE: YES
   Reaper:
     type: application
     platform: macOS

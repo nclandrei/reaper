@@ -1,0 +1,186 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set version
+        id: version
+        run: echo "tag=$(date -u +'%Y%m%d.%H%M%S')" >> "$GITHUB_OUTPUT"
+
+      - name: Import signing certificate
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build release
+        run: xcodebuild build -project Reaper.xcodeproj -scheme Reaper -configuration Release -derivedDataPath .build
+
+      - name: Generate app icon
+        run: |
+          ICON_SRC="icon/reaper-icon-1024.png"
+          ICONSET="Reaper.iconset"
+          mkdir -p "$ICONSET"
+          sips -z 16 16     "$ICON_SRC" --out "$ICONSET/icon_16x16.png"
+          sips -z 32 32     "$ICON_SRC" --out "$ICONSET/icon_16x16@2x.png"
+          sips -z 32 32     "$ICON_SRC" --out "$ICONSET/icon_32x32.png"
+          sips -z 64 64     "$ICON_SRC" --out "$ICONSET/icon_32x32@2x.png"
+          sips -z 128 128   "$ICON_SRC" --out "$ICONSET/icon_128x128.png"
+          sips -z 256 256   "$ICON_SRC" --out "$ICONSET/icon_128x128@2x.png"
+          sips -z 256 256   "$ICON_SRC" --out "$ICONSET/icon_256x256.png"
+          sips -z 512 512   "$ICON_SRC" --out "$ICONSET/icon_256x256@2x.png"
+          sips -z 512 512   "$ICON_SRC" --out "$ICONSET/icon_512x512.png"
+          sips -z 1024 1024 "$ICON_SRC" --out "$ICONSET/icon_512x512@2x.png"
+          iconutil -c icns "$ICONSET" -o Reaper.icns
+
+          # Replace icon in built app
+          APP=".build/Build/Products/Release/Reaper.app"
+          cp Reaper.icns "$APP/Contents/Resources/AppIcon.icns"
+
+      - name: Codesign
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          ENTITLEMENTS="Reaper/Reaper.entitlements"
+          APP=".build/Build/Products/Release/Reaper.app"
+
+          # Sign nested dylibs/frameworks
+          find "$APP/Contents" -name "*.dylib" -o -name "*.framework" | while read item; do
+            codesign --force --sign "$IDENTITY" --options runtime --timestamp "$item"
+          done
+
+          # Sign the main app
+          codesign --force --sign "$IDENTITY" \
+            --options runtime \
+            --entitlements "$ENTITLEMENTS" \
+            --timestamp \
+            "$APP"
+
+      - name: Verify codesign
+        run: codesign -dvv .build/Build/Products/Release/Reaper.app
+
+      - name: Package for notarization
+        run: ditto -c -k --sequesterRsrc --keepParent .build/Build/Products/Release/Reaper.app Reaper.zip
+
+      - name: Notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool submit Reaper.zip \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+      - name: Staple
+        run: xcrun stapler staple .build/Build/Products/Release/Reaper.app
+
+      - name: Re-package with stapled ticket
+        run: |
+          rm Reaper.zip
+          ditto -c -k --sequesterRsrc --keepParent .build/Build/Products/Release/Reaper.app Reaper.zip
+
+      - name: Compute SHA256
+        id: sha
+        run: echo "sha256=$(shasum -a 256 Reaper.zip | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.version.outputs.tag }}"
+          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          gh release create "$TAG" \
+            --title "Reaper ${TAG}" \
+            --notes "Automated build from main (${SHORT_SHA}). Signed and notarized." \
+            --target "${{ github.event.workflow_run.head_sha }}" \
+            Reaper.zip
+
+      - name: Update Homebrew tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          TAG="v${{ steps.version.outputs.tag }}"
+          SHA256="${{ steps.sha.outputs.sha256 }}"
+          URL="https://github.com/nclandrei/reaper/releases/download/${TAG}/Reaper.zip"
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/nclandrei/homebrew-tap.git" "$RUNNER_TEMP/homebrew-tap"
+
+          cat > "$RUNNER_TEMP/homebrew-tap/Casks/reaper.rb" << CASK
+          cask "reaper" do
+            version "${TAG#v}"
+            sha256 "${SHA256}"
+
+            url "${URL}"
+            name "Reaper"
+            desc "macOS menu bar process killer with one-click quit"
+            homepage "https://github.com/nclandrei/reaper"
+
+            depends_on macos: ">= :sonoma"
+
+            app "Reaper.app"
+
+            zap trash: [
+              "~/Library/Preferences/com.nclandrei.reaper.plist",
+            ]
+          end
+          CASK
+
+          cd "$RUNNER_TEMP/homebrew-tap"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/reaper.rb
+          git commit -m "Update reaper to ${TAG}"
+          git push
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true

@@ -1,0 +1,114 @@
+import XCTest
+@testable import Reaper
+
+final class ProcessGroupTests: XCTestCase {
+
+    private func makeProcess(pid: pid_t = 1, cpu: Double = 0, memory: UInt64 = 0) -> ProcessInfo {
+        ProcessInfo(
+            pid: pid,
+            name: "proc-\(pid)",
+            cpu: cpu,
+            memory: memory,
+            icon: nil,
+            isApp: false,
+            parentPID: 0,
+            bundleIdentifier: nil
+        )
+    }
+
+    // MARK: - totalCPU
+
+    func testTotalCPUSumsAllChildren() {
+        let group = ProcessGroup(
+            id: 1,
+            name: "App",
+            icon: nil,
+            children: [
+                makeProcess(pid: 1, cpu: 25.0),
+                makeProcess(pid: 2, cpu: 12.5),
+                makeProcess(pid: 3, cpu: 7.5),
+            ],
+            isApp: true
+        )
+        XCTAssertEqual(group.totalCPU, 45.0, accuracy: 0.001)
+    }
+
+    func testTotalCPUEmptyChildren() {
+        let group = ProcessGroup(id: 1, name: "Empty", icon: nil, children: [], isApp: false)
+        XCTAssertEqual(group.totalCPU, 0.0)
+    }
+
+    func testTotalCPUSingleChild() {
+        let group = ProcessGroup(
+            id: 1,
+            name: "Single",
+            icon: nil,
+            children: [makeProcess(pid: 1, cpu: 99.9)],
+            isApp: true
+        )
+        XCTAssertEqual(group.totalCPU, 99.9, accuracy: 0.001)
+    }
+
+    // MARK: - totalMemory
+
+    func testTotalMemorySumsAllChildren() {
+        let group = ProcessGroup(
+            id: 1,
+            name: "App",
+            icon: nil,
+            children: [
+                makeProcess(pid: 1, memory: 100_000_000),
+                makeProcess(pid: 2, memory: 200_000_000),
+            ],
+            isApp: true
+        )
+        XCTAssertEqual(group.totalMemory, 300_000_000)
+    }
+
+    func testTotalMemoryEmptyChildren() {
+        let group = ProcessGroup(id: 1, name: "Empty", icon: nil, children: [], isApp: false)
+        XCTAssertEqual(group.totalMemory, 0)
+    }
+
+    // MARK: - helperCount
+
+    func testHelperCountWithMultipleChildren() {
+        let group = ProcessGroup(
+            id: 1,
+            name: "App",
+            icon: nil,
+            children: [
+                makeProcess(pid: 1),
+                makeProcess(pid: 2),
+                makeProcess(pid: 3),
+            ],
+            isApp: true
+        )
+        // helperCount = children.count - 1 = 2
+        XCTAssertEqual(group.helperCount, 2)
+    }
+
+    func testHelperCountSingleChild() {
+        let group = ProcessGroup(
+            id: 1,
+            name: "App",
+            icon: nil,
+            children: [makeProcess(pid: 1)],
+            isApp: true
+        )
+        XCTAssertEqual(group.helperCount, 0)
+    }
+
+    func testHelperCountEmptyChildren() {
+        let group = ProcessGroup(id: 1, name: "Empty", icon: nil, children: [], isApp: false)
+        // max(0, 0 - 1) = 0, not -1
+        XCTAssertEqual(group.helperCount, 0)
+    }
+
+    // MARK: - Identifiable
+
+    func testIdentifiableID() {
+        let group = ProcessGroup(id: 42, name: "Test", icon: nil, children: [], isApp: false)
+        XCTAssertEqual(group.id, 42)
+    }
+}

@@ -78,8 +78,8 @@ struct ContentView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-        .frame(width: 420, height: 580)
-        .glassBackground()
+        .frame(width: 420, height: 560)
+        .background(.ultraThinMaterial)
         .preferredColorScheme(.dark)
     }
 }

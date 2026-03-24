@@ -22,6 +22,7 @@ struct ContentView: View {
                         ProcessGroupView(
                             group: group,
                             isExpanded: viewModel.expandedGroups.contains(group.id),
+                            isSearching: !viewModel.searchText.isEmpty,
                             onToggle: { viewModel.toggleExpanded(group.id) },
                             onKill: { viewModel.killProcess(pid: $0) },
                             onForceKill: { viewModel.forceKillProcess(pid: $0) },

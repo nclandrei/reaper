@@ -3,6 +3,7 @@ import SwiftUI
 struct ProcessGroupView: View {
     let group: ProcessGroup
     let isExpanded: Bool
+    let isSearching: Bool
     let onToggle: () -> Void
     let onKill: (pid_t) -> Void
     let onForceKill: (pid_t) -> Void
@@ -110,8 +111,8 @@ struct ProcessGroupView: View {
                 }
             }
 
-            // Expanded children (paginated)
-            if isExpanded && group.helperCount > 0 {
+            // Expanded children (paginated, auto-expand when searching)
+            if (isExpanded || isSearching) && group.helperCount > 0 {
                 let helpers = group.children.filter { $0.pid != group.id }
                 let visible = Array(helpers.prefix(visibleCount))
                 let remaining = helpers.count - visible.count

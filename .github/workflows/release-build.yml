@@ -2,7 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs: {}
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -157,25 +156,26 @@ jobs:
 
           git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/nclandrei/homebrew-tap.git" "$RUNNER_TEMP/homebrew-tap"
 
-          cat > "$RUNNER_TEMP/homebrew-tap/Casks/reaper.rb" <<CASK
-cask "reaper" do
-  version "${TAG#v}"
-  sha256 "${SHA256}"
-
-  url "${URL}"
-  name "Reaper"
-  desc "macOS menu bar process killer with one-click quit"
-  homepage "https://github.com/nclandrei/reaper"
-
-  depends_on macos: ">= :sonoma"
-
-  app "Reaper.app"
-
-  zap trash: [
-    "~/Library/Preferences/com.nclandrei.reaper.plist",
-  ]
-end
-CASK
+          CASK_FILE="$RUNNER_TEMP/homebrew-tap/Casks/reaper.rb"
+          {
+            echo "cask \"reaper\" do"
+            echo "  version \"${TAG#v}\""
+            echo "  sha256 \"${SHA256}\""
+            echo ""
+            echo "  url \"${URL}\""
+            echo "  name \"Reaper\""
+            echo "  desc \"macOS menu bar process killer with one-click quit\""
+            echo "  homepage \"https://github.com/nclandrei/reaper\""
+            echo ""
+            echo "  depends_on macos: \">= :sonoma\""
+            echo ""
+            echo "  app \"Reaper.app\""
+            echo ""
+            echo "  zap trash: ["
+            echo "    \"~/Library/Preferences/com.nclandrei.reaper.plist\","
+            echo "  ]"
+            echo "end"
+          } > "$CASK_FILE"
 
           cd "$RUNNER_TEMP/homebrew-tap"
           git config user.name "github-actions[bot]"

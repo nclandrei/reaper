@@ -29,7 +29,7 @@ struct MenuBarLabel: View {
     }
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 7) {
             if style != .textOnly && style != .dualStack {
                 Image(nsImage: renderIndicator())
             }

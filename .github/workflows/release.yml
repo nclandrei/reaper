@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -15,13 +16,13 @@ permissions:
 
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set version
         id: version
@@ -137,11 +138,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.version.outputs.tag }}"
-          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          FULL_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          SHORT_SHA=$(echo "$FULL_SHA" | cut -c1-7)
           gh release create "$TAG" \
             --title "Reaper ${TAG}" \
             --notes "Automated build from main (${SHORT_SHA}). Signed and notarized." \
-            --target "${{ github.event.workflow_run.head_sha }}" \
+            --target "${FULL_SHA}" \
             Reaper.zip
 
       - name: Update Homebrew tap
@@ -154,25 +156,25 @@ jobs:
 
           git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/nclandrei/homebrew-tap.git" "$RUNNER_TEMP/homebrew-tap"
 
-          cat > "$RUNNER_TEMP/homebrew-tap/Casks/reaper.rb" << CASK
-          cask "reaper" do
-            version "${TAG#v}"
-            sha256 "${SHA256}"
+          cat > "$RUNNER_TEMP/homebrew-tap/Casks/reaper.rb" <<CASK
+cask "reaper" do
+  version "${TAG#v}"
+  sha256 "${SHA256}"
 
-            url "${URL}"
-            name "Reaper"
-            desc "macOS menu bar process killer with one-click quit"
-            homepage "https://github.com/nclandrei/reaper"
+  url "${URL}"
+  name "Reaper"
+  desc "macOS menu bar process killer with one-click quit"
+  homepage "https://github.com/nclandrei/reaper"
 
-            depends_on macos: ">= :sonoma"
+  depends_on macos: ">= :sonoma"
 
-            app "Reaper.app"
+  app "Reaper.app"
 
-            zap trash: [
-              "~/Library/Preferences/com.nclandrei.reaper.plist",
-            ]
-          end
-          CASK
+  zap trash: [
+    "~/Library/Preferences/com.nclandrei.reaper.plist",
+  ]
+end
+CASK
 
           cd "$RUNNER_TEMP/homebrew-tap"
           git config user.name "github-actions[bot]"

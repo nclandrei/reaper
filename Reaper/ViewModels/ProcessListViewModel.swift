@@ -179,13 +179,21 @@ final class ProcessListViewModel: ObservableObject {
     }
 
     private func applySorting(to groups: [ProcessGroup]) -> [ProcessGroup] {
-        switch sortOrder {
-        case .cpu:
-            return groups.sorted { $0.totalCPU > $1.totalCPU }
-        case .memory:
-            return groups.sorted { $0.totalMemory > $1.totalMemory }
-        case .name:
-            return groups.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        let sortChildren: ([ProcessInfo]) -> [ProcessInfo] = { children in
+            switch self.sortOrder {
+            case .cpu:    return children.sorted { $0.cpu > $1.cpu }
+            case .memory: return children.sorted { $0.memory > $1.memory }
+            case .name:   return children.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+            }
         }
+
+        var sorted: [ProcessGroup]
+        switch sortOrder {
+        case .cpu:    sorted = groups.sorted { $0.totalCPU > $1.totalCPU }
+        case .memory: sorted = groups.sorted { $0.totalMemory > $1.totalMemory }
+        case .name:   sorted = groups.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        }
+
+        return sorted.map { var g = $0; g.children = sortChildren(g.children); return g }
     }
 }

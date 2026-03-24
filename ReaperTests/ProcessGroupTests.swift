@@ -3,8 +3,8 @@ import XCTest
 
 final class ProcessGroupTests: XCTestCase {
 
-    private func makeProcess(pid: pid_t = 1, cpu: Double = 0, memory: UInt64 = 0) -> ProcessInfo {
-        ProcessInfo(
+    private func makeProcess(pid: pid_t = 1, cpu: Double = 0, memory: UInt64 = 0) -> Reaper.ProcessInfo {
+        Reaper.ProcessInfo(
             pid: pid,
             name: "proc-\(pid)",
             cpu: cpu,

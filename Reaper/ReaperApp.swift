@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct ReaperApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var viewModel = ProcessListViewModel()
     @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
     @AppStorage("cpuStyle") private var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
@@ -14,10 +15,6 @@ struct ReaperApp: App {
     private var activeStyle: MenuBarStyle {
         let raw = activeMetric == .cpu ? cpuStyle : memoryStyle
         return MenuBarStyle(rawValue: raw) ?? (activeMetric == .cpu ? .defaultForCPU : .defaultForMemory)
-    }
-
-    init() {
-        HotkeyManager.shared.register()
     }
 
     var body: some Scene {

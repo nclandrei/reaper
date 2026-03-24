@@ -142,7 +142,7 @@ enum MenuBarRenderer {
 
     // B: Segments
     static func segments(fill: Double) -> NSImage {
-        let count = 10, segW: CGFloat = 3.5, gap: CGFloat = 1.5, h: CGFloat = 10
+        let count = 8, segW: CGFloat = 3, gap: CGFloat = 1.5, h: CGFloat = 10
         let w = CGFloat(count) * (segW + gap) - gap
         guard let (ctx, w, h) = makeContext(w: w, h: h) else { return NSImage() }
 
@@ -234,7 +234,7 @@ enum MenuBarRenderer {
 
     // F: Dots
     static func dots(fill: Double) -> NSImage {
-        let count = 10, dotR: CGFloat = 2.5, gap: CGFloat = 3.5
+        let count = 8, dotR: CGFloat = 2, gap: CGFloat = 2.5
         let h: CGFloat = dotR * 2
         let w = CGFloat(count) * (dotR * 2 + gap) - gap
         guard let (ctx, w, h) = makeContext(w: w, h: h) else { return NSImage() }

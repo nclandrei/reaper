@@ -16,6 +16,10 @@ struct ReaperApp: App {
         return MenuBarStyle(rawValue: raw) ?? (activeMetric == .cpu ? .defaultForCPU : .defaultForMemory)
     }
 
+    init() {
+        HotkeyManager.shared.register()
+    }
+
     var body: some Scene {
         MenuBarExtra {
             ContentView(viewModel: viewModel)

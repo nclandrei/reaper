@@ -58,6 +58,15 @@ struct SettingsView: View {
                 }
             }
 
+            HStack {
+                Text("Hotkey")
+                    .font(.system(size: 12))
+                Spacer()
+                Text("⌥⇧R")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+
             Toggle("Launch at login", isOn: Binding(
                 get: { viewModel.launchAtLogin },
                 set: { viewModel.setLaunchAtLogin($0) }

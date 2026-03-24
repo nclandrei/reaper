@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon/reaper-icon-1024.png" width="128" height="128" alt="Reaper icon">
+</p>
+
 # Reaper
 
 A lightweight macOS menu bar app for monitoring and killing processes. Like Activity Monitor, but faster.

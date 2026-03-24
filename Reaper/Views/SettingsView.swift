@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
     @AppStorage("cpuStyle") private var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
     @AppStorage("memoryStyle") private var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
+    @AppStorage("hideMenuBarText") private var hideMenuBarText: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -40,6 +41,9 @@ struct SettingsView: View {
                 }
                 .frame(width: 140)
             }
+
+            Toggle("Hide text in menu bar", isOn: $hideMenuBarText)
+                .font(.system(size: 12))
 
             // Hotkey recorder
             HStack {

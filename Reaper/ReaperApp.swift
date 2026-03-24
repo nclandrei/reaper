@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @AppStorage("menuBarMetric") var menuBarMetric: String = MenuBarMetric.memory.rawValue
     @AppStorage("cpuStyle") var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
     @AppStorage("memoryStyle") var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
+    @AppStorage("hideMenuBarText") var hideMenuBarText: Bool = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Status item
@@ -102,19 +103,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Text
-        switch style {
-        case .dualStack:
-            button.title = " \(Int(stats.totalCPU))% \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
-        case .textOnly:
-            if metric == .cpu {
-                button.title = "\(Int(stats.totalCPU))%  \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
-            } else {
-                button.title = "\(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))  \(Int(stats.totalCPU))%"
-            }
-        default:
-            switch metric {
-            case .cpu:    button.title = " \(Int(stats.totalCPU))%"
-            case .memory: button.title = " \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
+        if hideMenuBarText && style != .textOnly {
+            button.title = ""
+        } else {
+            switch style {
+            case .dualStack:
+                button.title = " \(Int(stats.totalCPU))% \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
+            case .textOnly:
+                if metric == .cpu {
+                    button.title = "\(Int(stats.totalCPU))%  \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
+                } else {
+                    button.title = "\(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))  \(Int(stats.totalCPU))%"
+                }
+            default:
+                switch metric {
+                case .cpu:    button.title = " \(Int(stats.totalCPU))%"
+                case .memory: button.title = " \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
+                }
             }
         }
 

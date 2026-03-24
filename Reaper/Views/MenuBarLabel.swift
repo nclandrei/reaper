@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 enum MenuBarMetric: String, CaseIterable, Identifiable {
     case memory = "Memory"
@@ -23,12 +24,11 @@ struct MenuBarLabel: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "chart.bar.fill", variableValue: fillPercent)
-                .font(.system(size: 14))
+            Image(nsImage: Self.bar(fill: fillPercent))
 
             switch metric {
             case .memory:
-                Text(Formatters.memoryFraction(used: stats.usedMemory, total: stats.totalMemory))
+                Text(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .monospacedDigit()
             case .cpu:
@@ -37,5 +37,44 @@ struct MenuBarLabel: View {
                     .monospacedDigit()
             }
         }
+    }
+
+    static func bar(fill: Double) -> NSImage {
+        let w: CGFloat = 22
+        let h: CGFloat = 10
+        let r: CGFloat = 2
+        let s: CGFloat = 2 // Retina
+
+        let cs = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil, width: Int(w * s), height: Int(h * s),
+            bitsPerComponent: 8, bytesPerRow: 0, space: cs,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ), let cgAfterDraw = {
+            ctx.scaleBy(x: s, y: s)
+
+            // Background track
+            ctx.setFillColor(CGColor(gray: 1, alpha: 0.25))
+            ctx.addPath(CGPath(roundedRect: CGRect(x: 0, y: 0, width: w, height: h),
+                               cornerWidth: r, cornerHeight: r, transform: nil))
+            ctx.fillPath()
+
+            // Fill
+            let fw = max(r * 2, w * fill)
+            ctx.setFillColor(CGColor(gray: 1, alpha: 1.0))
+            ctx.addPath(CGPath(roundedRect: CGRect(x: 0, y: 0, width: fw, height: h),
+                               cornerWidth: r, cornerHeight: r, transform: nil))
+            ctx.fillPath()
+
+            return ctx.makeImage()
+        }() else {
+            let fb = NSImage(size: .zero)
+            fb.isTemplate = true
+            return fb
+        }
+
+        let img = NSImage(cgImage: cgAfterDraw, size: NSSize(width: w, height: h))
+        img.isTemplate = true
+        return img
     }
 }

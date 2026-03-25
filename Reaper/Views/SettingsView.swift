@@ -3,6 +3,7 @@ import KeyboardShortcuts
 
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
+    @ObservedObject var updaterService: UpdaterService
     @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
     @AppStorage("cpuStyle") private var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
     @AppStorage("memoryStyle") private var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
@@ -77,6 +78,31 @@ struct SettingsView: View {
                 set: { viewModel.setLaunchAtLogin($0) }
             ))
             .font(.system(size: 12))
+
+            Divider()
+
+            // Updates
+            Text("Updates")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            Toggle("Check automatically", isOn: Binding(
+                get: { updaterService.automaticallyChecksForUpdates },
+                set: { updaterService.automaticallyChecksForUpdates = $0 }
+            ))
+            .font(.system(size: 12))
+
+            Button("Check for Updates...") {
+                updaterService.checkForUpdates()
+            }
+            .font(.system(size: 12))
+            .disabled(!updaterService.canCheckForUpdates)
+
+            if let lastCheck = updaterService.lastUpdateCheckDate {
+                Text("Last checked: \(lastCheck.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(16)
         .frame(width: 320)

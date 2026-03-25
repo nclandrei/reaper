@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private var viewModel = ProcessListViewModel()
+    private let updaterService = UpdaterService()
     private var eventMonitor: Any?
 
     @AppStorage("menuBarMetric") var menuBarMetric: String = MenuBarMetric.memory.rawValue
@@ -36,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentSize = NSSize(width: 420, height: 580)
         popover.behavior = .transient
         popover.animates = true
-        popover.contentViewController = NSHostingController(rootView: ContentView(viewModel: viewModel))
+        popover.contentViewController = NSHostingController(rootView: ContentView(viewModel: viewModel, updaterService: updaterService))
 
         // Hotkey
         KeyboardShortcuts.reset(.togglePanel)

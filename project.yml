@@ -7,6 +7,9 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: "2.0.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
 targets:
   ReaperTests:
     type: bundle.unit-test
@@ -27,6 +30,7 @@ targets:
       - path: Reaper
     dependencies:
       - package: KeyboardShortcuts
+      - package: Sparkle
     info:
       path: Reaper/Info.plist
       properties:
@@ -34,6 +38,10 @@ targets:
         CFBundleDisplayName: Reaper
         CFBundleName: Reaper
         NSHumanReadableCopyright: "Copyright © 2024 Reaper. MIT License."
+        SUFeedURL: "https://nclandrei.github.io/reaper/appcast.xml"
+        SUPublicEDKey: "SPARKLE_PUBLIC_EDDSA_KEY_PLACEHOLDER"
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     settings:
       base:
         SWIFT_VERSION: "5.9"

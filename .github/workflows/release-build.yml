@@ -136,7 +136,16 @@ jobs:
             --wait
 
       - name: Staple
-        run: xcrun stapler staple .build/Build/Products/Release/Reaper.app
+        run: |
+          for i in 1 2 3 4 5; do
+            if xcrun stapler staple .build/Build/Products/Release/Reaper.app; then
+              exit 0
+            fi
+            echo "Staple attempt $i failed, retrying in 15s..."
+            sleep 15
+          done
+          echo "Stapling failed after 5 attempts"
+          exit 1
 
       - name: Re-package with stapled ticket
         run: |

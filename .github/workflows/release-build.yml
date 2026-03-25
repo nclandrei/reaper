@@ -100,13 +100,9 @@ jobs:
           ENTITLEMENTS="Reaper/Reaper.entitlements"
           APP=".build/Build/Products/Release/Reaper.app"
 
-          # Sign XPC services (Sparkle)
-          find "$APP/Contents" -name "*.xpc" -type d | while read item; do
-            codesign --force --sign "$IDENTITY" --options runtime --timestamp "$item"
-          done
-
-          # Sign nested dylibs/frameworks
-          find "$APP/Contents" -name "*.dylib" -o -name "*.framework" | while read item; do
+          # Sign all nested executables, XPC services, dylibs, and frameworks (deepest first)
+          find "$APP/Contents" \( -name "*.xpc" -o -name "*.dylib" -o -name "*.framework" \) -print0 | \
+            sort -rz | while IFS= read -r -d '' item; do
             codesign --force --sign "$IDENTITY" --options runtime --timestamp "$item"
           done
 
@@ -115,6 +111,7 @@ jobs:
             --options runtime \
             --entitlements "$ENTITLEMENTS" \
             --timestamp \
+            --deep \
             "$APP"
 
       - name: Verify codesign
@@ -129,11 +126,25 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          xcrun notarytool submit Reaper.zip \
+          RESULT=$(xcrun notarytool submit Reaper.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --wait 2>&1)
+          echo "$RESULT"
+
+          ID=$(echo "$RESULT" | grep "id:" | head -1 | awk '{print $2}')
+          STATUS=$(echo "$RESULT" | grep "status:" | tail -1 | awk '{print $2}')
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Notarization failed with status: $STATUS"
+            echo "Fetching notarization log..."
+            xcrun notarytool log "$ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_ID_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" || true
+            exit 1
+          fi
 
       - name: Staple
         run: |

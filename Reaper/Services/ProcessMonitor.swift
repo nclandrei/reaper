@@ -3,6 +3,11 @@ import AppKit
 
 final class ProcessMonitor {
     private var previousSamples: [pid_t: (cpuTime: UInt64, timestamp: TimeInterval)] = [:]
+    private let machTimeToNanos: Double = {
+        var info = mach_timebase_info_data_t()
+        mach_timebase_info(&info)
+        return Double(info.numer) / Double(info.denom)
+    }()
 
     func refresh() -> [ProcessInfo] {
         let uid = getuid()
@@ -24,7 +29,8 @@ final class ProcessMonitor {
                 let dt = now - prev.timestamp
                 if dt > 0 {
                     let delta = cpuTime >= prev.cpuTime ? cpuTime - prev.cpuTime : 0
-                    cpuPercent = (Double(delta) / 1_000_000_000.0) / dt * 100.0
+                    let deltaNanos = Double(delta) * machTimeToNanos
+                    cpuPercent = (deltaNanos / 1_000_000_000.0) / dt * 100.0
                     cpuPercent = max(0, min(cpuPercent, 10000))
                 }
             }

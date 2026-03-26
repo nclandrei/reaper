@@ -97,6 +97,13 @@ jobs:
           APP=".build/Build/Products/Release/Reaper.app"
           cp Reaper.icns "$APP/Contents/Resources/AppIcon.icns"
 
+      - name: Patch built Info.plist with version
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          APP=".build/Build/Products/Release/Reaper.app"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $TAG" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TAG" "$APP/Contents/Info.plist"
+
       - name: Codesign
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

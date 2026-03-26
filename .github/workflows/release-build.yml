@@ -26,14 +26,16 @@ jobs:
 
       - name: Set version
         id: version
-        run: echo "tag=$(date -u +'%Y%m%d.%H%M%S')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "tag=$(date -u +'%Y%m%d.%H%M%S')" >> "$GITHUB_OUTPUT"
+          echo "display=$(cat VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
 
       - name: Inject version and Sparkle public key into Info.plist
         env:
           SPARKLE_EDDSA_PUBLIC_KEY: ${{ secrets.SPARKLE_EDDSA_PUBLIC_KEY }}
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.0" Reaper/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.display }}" Reaper/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TAG" Reaper/Info.plist
           /usr/libexec/PlistBuddy -c "Set :SUPublicEDKey $SPARKLE_EDDSA_PUBLIC_KEY" Reaper/Info.plist
           # Also update project.yml since xcodegen merges its properties over Info.plist
@@ -101,7 +103,7 @@ jobs:
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           APP=".build/Build/Products/Release/Reaper.app"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.0" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.display }}" "$APP/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TAG" "$APP/Contents/Info.plist"
 
       - name: Codesign
@@ -271,7 +273,7 @@ jobs:
               <title>Reaper $TAG</title>
               <pubDate>$PUB_DATE</pubDate>
               <sparkle:version>$VERSION</sparkle:version>
-              <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+              <sparkle:shortVersionString>${{ steps.version.outputs.display }}</sparkle:shortVersionString>
               <enclosure
                 url=\"$URL\"
                 length=\"$SIZE\"

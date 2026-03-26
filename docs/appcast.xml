@@ -5,5 +5,17 @@
     <link>https://nclandrei.github.io/reaper/appcast.xml</link>
     <description>Reaper app updates</description>
     <language>en</language>
+      <item>
+    <title>Reaper v20260326.084715</title>
+    <pubDate>Thu, 26 Mar 2026 08:50:10 +0000</pubDate>
+    <sparkle:version>20260326.084715</sparkle:version>
+    <sparkle:shortVersionString>20260326.084715</sparkle:shortVersionString>
+    <enclosure
+      url="https://github.com/nclandrei/reaper/releases/download/v20260326.084715/Reaper.zip"
+      length="2490475"
+      type="application/octet-stream"
+      sparkle:edSignature="YjM/SUqwV2gddUIDnVOn0E55QJsSjHp0rc1+68WIiE1oEcUmdyrT+CsPKq98CyWFZ7If4NwsZ4z7M9tFbMCgAw=="
+    />
+  </item>
   </channel>
 </rss>

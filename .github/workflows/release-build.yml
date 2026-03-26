@@ -71,7 +71,10 @@ jobs:
         run: xcodegen generate
 
       - name: Build release
-        run: xcodebuild build -project Reaper.xcodeproj -scheme Reaper -configuration Release -derivedDataPath .build
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          xcodebuild build -project Reaper.xcodeproj -scheme Reaper -configuration Release -derivedDataPath .build \
+            MARKETING_VERSION="$TAG" CURRENT_PROJECT_VERSION="$TAG"
 
       - name: Generate app icon
         run: |

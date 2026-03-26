@@ -36,6 +36,8 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $TAG" Reaper/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TAG" Reaper/Info.plist
           /usr/libexec/PlistBuddy -c "Set :SUPublicEDKey $SPARKLE_EDDSA_PUBLIC_KEY" Reaper/Info.plist
+          # Also update project.yml since xcodegen merges its properties over Info.plist
+          sed -i '' "s|SPARKLE_PUBLIC_EDDSA_KEY_PLACEHOLDER|$SPARKLE_EDDSA_PUBLIC_KEY|" project.yml
 
       - name: Import signing certificate
         env:

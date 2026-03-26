@@ -41,5 +41,17 @@
       sparkle:edSignature="5Mjawavekz7pUWopUxq5OfsZLsmYrL4Drg/WTwif7WRBIGdohl2CkWaU5lXEumUuiRT8DueesbXX0BoEvAByDQ=="
     />
   </item>
+      <item>
+    <title>Reaper v20260326.093300</title>
+    <pubDate>Thu, 26 Mar 2026 09:35:51 +0000</pubDate>
+    <sparkle:version>20260326.093300</sparkle:version>
+    <sparkle:shortVersionString>20260326.093300</sparkle:shortVersionString>
+    <enclosure
+      url="https://github.com/nclandrei/reaper/releases/download/v20260326.093300/Reaper.zip"
+      length="2490566"
+      type="application/octet-stream"
+      sparkle:edSignature="KHjU0an8PlBYEAWp3y5MpyZOsH5o84DTbKXhSS/upDsImGdj6sOqKP92MW7tMqHrXNlMqxwS1PuPvIOIAXRqCA=="
+    />
+  </item>
   </channel>
 </rss>

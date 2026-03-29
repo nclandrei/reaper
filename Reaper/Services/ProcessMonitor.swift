@@ -3,6 +3,7 @@ import AppKit
 
 final class ProcessMonitor {
     private var previousSamples: [pid_t: (cpuTime: UInt64, timestamp: TimeInterval)] = [:]
+    private var cpuSmoother = CPUSmoother()
     private let machTimeToNanos: Double = {
         var info = mach_timebase_info_data_t()
         mach_timebase_info(&info)
@@ -35,6 +36,7 @@ final class ProcessMonitor {
                 }
             }
 
+            cpuPercent = cpuSmoother.smooth(pid: raw.pid, rawCPU: cpuPercent)
             previousSamples[raw.pid] = (cpuTime, now)
 
             let app = appsByPID[raw.pid]
@@ -57,6 +59,7 @@ final class ProcessMonitor {
 
         let activePIDs = Set(rawProcs.map(\.pid))
         previousSamples = previousSamples.filter { activePIDs.contains($0.key) }
+        cpuSmoother.purge(keeping: activePIDs)
 
         return result
     }

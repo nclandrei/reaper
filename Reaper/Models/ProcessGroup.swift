@@ -19,7 +19,11 @@ struct ProcessGroup: Identifiable {
         max(0, children.count - 1)
     }
 
-    var isBackground: Bool {
-        id == -1
+    var threatScore: Double {
+        totalCPU * 2 + Double(totalMemory) / 1_073_741_824 * 10
+    }
+
+    var heatLevel: HeatLevel {
+        HeatLevel.forProcess(cpu: totalCPU, memory: totalMemory)
     }
 }

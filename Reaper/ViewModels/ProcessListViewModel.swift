@@ -4,8 +4,13 @@ import Combine
 @MainActor
 final class ProcessListViewModel: ObservableObject {
     @Published var groups: [ProcessGroup] = []
+
+    /// Top groups for heatmap display, capped to avoid clutter
+    var appGroups: [ProcessGroup] {
+        Array(groups.prefix(8))
+    }
     @Published var searchText = ""
-    @Published var sortOrder: SortOrder = .cpu
+    @Published var sortOrder: SortOrder = .threat
     @Published var systemStats = SystemStats()
     @Published var expandedGroups: Set<pid_t> = []
     @Published var cpuHistory: [Double] = []
@@ -133,16 +138,21 @@ final class ProcessListViewModel: ObservableObject {
             ))
         }
 
-        // Background catch-all
+        // Background processes — show individually if they use notable resources
         let unassigned = nonApps.filter { !assigned.contains($0.pid) }
-        if !unassigned.isEmpty {
-            groups.append(ProcessGroup(
-                id: -1,
-                name: "Background",
-                icon: NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil),
-                children: unassigned,
-                isApp: false
-            ))
+        let cpuThreshold = 1.0
+        let memThreshold: UInt64 = 100 * 1_048_576
+
+        for process in unassigned {
+            if process.cpu >= cpuThreshold || process.memory >= memThreshold {
+                groups.append(ProcessGroup(
+                    id: process.pid,
+                    name: Self.friendlyName(for: process),
+                    icon: process.icon,
+                    children: [process],
+                    isApp: false
+                ))
+            }
         }
 
         return groups
@@ -159,6 +169,43 @@ final class ProcessListViewModel: ObservableObject {
         }
 
         return false
+    }
+
+    // MARK: - Name Resolution
+
+    /// Maps version-like or cryptic process names to friendly names using the path
+    private static let pathNameMap: [(pattern: String, name: String)] = [
+        ("claude", "Claude Code"),
+        ("cursor", "Cursor"),
+        ("copilot", "Copilot"),
+        ("windsurf", "Windsurf"),
+        ("docker", "Docker"),
+        ("postgres", "PostgreSQL"),
+        ("mysql", "MySQL"),
+        ("redis", "Redis"),
+        ("nginx", "nginx"),
+        ("node", "Node.js"),
+        ("python", "Python"),
+        ("ruby", "Ruby"),
+    ]
+
+    private static func friendlyName(for process: ProcessInfo) -> String {
+        let name = process.name
+
+        // If name looks like a version number (e.g. "2.1.58") or is very short/cryptic, try path
+        let looksLikeVersion = name.range(of: #"^\d+[\.\d]*$"#, options: .regularExpression) != nil
+        let isCryptic = name.count <= 3 && !name.contains(where: { $0.isUppercase })
+
+        if looksLikeVersion || isCryptic, let path = process.path {
+            let lowPath = path.lowercased()
+            for (pattern, friendlyName) in pathNameMap {
+                if lowPath.contains(pattern) {
+                    return friendlyName
+                }
+            }
+        }
+
+        return name
     }
 
     // MARK: - Search & Sort
@@ -181,6 +228,7 @@ final class ProcessListViewModel: ObservableObject {
     private func applySorting(to groups: [ProcessGroup]) -> [ProcessGroup] {
         let sortChildren: ([ProcessInfo]) -> [ProcessInfo] = { children in
             switch self.sortOrder {
+            case .threat: return children.sorted { $0.cpu > $1.cpu }
             case .cpu:    return children.sorted { $0.cpu > $1.cpu }
             case .memory: return children.sorted { $0.memory > $1.memory }
             case .name:   return children.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
@@ -189,6 +237,7 @@ final class ProcessListViewModel: ObservableObject {
 
         var sorted: [ProcessGroup]
         switch sortOrder {
+        case .threat: sorted = groups.sorted { $0.threatScore > $1.threatScore }
         case .cpu:    sorted = groups.sorted { $0.totalCPU > $1.totalCPU }
         case .memory: sorted = groups.sorted { $0.totalMemory > $1.totalMemory }
         case .name:   sorted = groups.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }

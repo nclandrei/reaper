@@ -12,7 +12,7 @@ final class UpdaterService: ObservableObject {
     }
 
     var automaticallyChecksForUpdates: Bool {
-        get { updaterController?.updater.automaticallyChecksForUpdates ?? false }
+        get { updaterController?.updater.automaticallyChecksForUpdates ?? true }
         set { updaterController?.updater.automaticallyChecksForUpdates = newValue }
     }
 
@@ -27,6 +27,11 @@ final class UpdaterService: ObservableObject {
                 userDriverDelegate: nil
             )
             self.updaterController = controller
+            // Ensure automatic checks default to ON; Sparkle may default to false
+            // until the user has explicitly changed the preference.
+            if UserDefaults.standard.object(forKey: "SUEnableAutomaticChecks") == nil {
+                controller.updater.automaticallyChecksForUpdates = true
+            }
             controller.updater.publisher(for: \.canCheckForUpdates)
                 .assign(to: &$canCheckForUpdates)
         } else {

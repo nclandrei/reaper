@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaper UI Concept D — Resource Heatmap</title>
+<style>
+  :root {
+    /* Base theme */
+    --bg-page: #0e0e1a;
+    --bg-popover: #1c1c2e;
+    --bg-popover-translucent: rgba(28, 28, 46, 0.92);
+    --bg-glass: rgba(255, 255, 255, 0.04);
+    --bg-glass-hover: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-glow: rgba(255, 255, 255, 0.1);
+
+    /* Text */
+    --text-primary: #e8e8f0;
+    --text-secondary: rgba(232, 232, 240, 0.55);
+    --text-tertiary: rgba(232, 232, 240, 0.35);
+    --text-on-hot: rgba(255, 255, 255, 0.95);
+
+    /* Thermal scale */
+    --cold-deep: #0d2847;
+    --cold: #1e3a5f;
+    --cold-mid: #1a5276;
+    --cool: #2980b9;
+    --warm: #c4a000;
+    --warm-mid: #e67e22;
+    --hot: #e74c3c;
+    --hot-critical: #dc3545;
+    --hot-extreme: #ff1744;
+
+    /* Semantic */
+    --accent: #6c63ff;
+    --kill-red: #ff1744;
+    --kill-red-hover: #ff4569;
+    --search-bg: rgba(255, 255, 255, 0.05);
+    --search-border: rgba(255, 255, 255, 0.08);
+
+    /* Dimensions */
+    --popover-width: 420px;
+    --popover-radius: 14px;
+    --tile-radius: 8px;
+    --gap: 4px;
+
+    /* Fonts */
+    --font: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--bg-page);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Concept header ── */
+  .concept-header {
+    max-width: var(--popover-width);
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .concept-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--cool), var(--hot-extreme));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .concept-header .subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  .concept-header p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  /* ── Popover container ── */
+  .popover {
+    width: var(--popover-width);
+    min-height: 560px;
+    background: var(--bg-popover-translucent);
+    border-radius: var(--popover-radius);
+    border: 1px solid var(--border-subtle);
+    box-shadow:
+      0 0 0 0.5px rgba(0,0,0,0.3),
+      0 24px 80px rgba(0, 0, 0, 0.55),
+      0 8px 32px rgba(0, 0, 0, 0.35),
+      inset 0 0.5px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(60px) saturate(1.8);
+    -webkit-backdrop-filter: blur(60px) saturate(1.8);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Noise overlay for thermal camera feel */
+  .popover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: var(--popover-radius);
+    opacity: 0.5;
+  }
+
+  .popover > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Arrow pointer ── */
+  .popover-arrow {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 8px;
+    z-index: 3;
+  }
+
+  .popover-arrow::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--bg-popover-translucent);
+    border: 1px solid var(--border-subtle);
+    border-bottom: none;
+    border-right: none;
+    transform: rotate(45deg);
+    top: 3px;
+    left: 2px;
+  }
+
+  /* ── Thermal Overview bar ── */
+  .thermal-overview {
+    padding: 14px 16px 10px;
+  }
+
+  .thermal-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .thermal-label span {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+  }
+
+  .thermal-label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--hot-extreme);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; box-shadow: 0 0 6px var(--hot-extreme); }
+  }
+
+  .thermal-bar {
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    gap: 1px;
+    background: rgba(0,0,0,0.3);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .thermal-segment {
+    height: 100%;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .thermal-segment .seg-label {
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .thermal-segment:hover .seg-label {
+    opacity: 1;
+  }
+
+  .thermal-segment:hover {
+    filter: brightness(1.2);
+    transform: scaleY(1.1);
+  }
+
+  .thermal-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding: 0 2px;
+  }
+
+  .thermal-stats .stat {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+  }
+
+  .thermal-stats .stat strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .thermal-stats .sys-temp {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--warm);
+    font-weight: 600;
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+
+  /* ── Search ── */
+  .search-wrapper {
+    padding: 4px 16px 8px;
+  }
+
+  .search-box {
+    width: 100%;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--search-border);
+    background: var(--search-bg);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .search-box:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.07);
+  }
+
+  .search-box:focus-within {
+    border-color: rgba(108, 99, 255, 0.4);
+    background: rgba(108, 99, 255, 0.05);
+  }
+
+  .search-icon {
+    font-size: 13px;
+    opacity: 0.4;
+  }
+
+  .search-box input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 12px;
+    font-family: var(--font);
+    color: var(--text-primary);
+    letter-spacing: 0.2px;
+  }
+
+  .search-box input::placeholder {
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+
+  .search-shortcut {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    background: rgba(255,255,255,0.06);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    border: 0.5px solid rgba(255,255,255,0.08);
+  }
+
+  /* ── Heatmap grid ── */
+  .heatmap-container {
+    flex: 1;
+    padding: 0 12px;
+    min-height: 0;
+  }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: var(--gap);
+    height: 310px;
+  }
+
+  /* Tile base */
+  .tile {
+    border-radius: var(--tile-radius);
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    border-radius: var(--tile-radius);
+  }
+
+  .tile:hover {
+    transform: scale(1.04);
+    z-index: 10;
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+  }
+
+  .tile .initial {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-on-hot);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    line-height: 1;
+    transition: all 0.25s;
+    letter-spacing: -0.5px;
+  }
+
+  .tile .app-name {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.3px;
+    transition: all 0.25s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    text-align: center;
+  }
+
+  /* Hover overlay */
+  .tile .hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: var(--tile-radius);
+    padding: 6px;
+    gap: 3px;
+  }
+
+  .tile:hover .hover-overlay {
+    opacity: 1;
+  }
+
+  .tile:hover .initial,
+  .tile:hover .app-name {
+    opacity: 0;
+  }
+
+  .hover-overlay .hover-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+  }
+
+  .hover-overlay .hover-stats {
+    font-size: 9px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .hover-overlay .kill-btn {
+    margin-top: 2px;
+    padding: 4px 14px;
+    border: none;
+    border-radius: 5px;
+    background: var(--kill-red);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(255, 23, 68, 0.4);
+  }
+
+  .hover-overlay .kill-btn:hover {
+    background: var(--kill-red-hover);
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(255, 23, 68, 0.6);
+  }
+
+  /* Individual tile sizes and colors (treemap proportional) */
+  /* Chrome: 45% CPU, 3.2GB = HUGE, HOT RED */
+  .tile-chrome {
+    grid-column: 1 / 7;
+    grid-row: 1 / 5;
+    background: linear-gradient(145deg, #e63946 0%, #c0392b 40%, #a93226 100%);
+    box-shadow: inset 0 0 40px rgba(255, 23, 68, 0.15);
+    animation: tile-glow-red 3s ease-in-out infinite alternate;
+  }
+
+  .tile-chrome .initial { font-size: 42px; }
+  .tile-chrome .app-name { font-size: 12px; }
+
+  @keyframes tile-glow-red {
+    0% { box-shadow: inset 0 0 30px rgba(255, 23, 68, 0.1), 0 0 0 transparent; }
+    100% { box-shadow: inset 0 0 50px rgba(255, 23, 68, 0.2), 0 0 20px rgba(255, 23, 68, 0.08); }
+  }
+
+  /* Zoom: 35% CPU, 1.8GB = LARGE, HOT ORANGE-RED */
+  .tile-zoom {
+    grid-column: 7 / 13;
+    grid-row: 1 / 4;
+    background: linear-gradient(145deg, #e67e22 0%, #d35400 50%, #c0392b 100%);
+    box-shadow: inset 0 0 30px rgba(230, 126, 34, 0.1);
+    animation: tile-glow-orange 3.5s ease-in-out infinite alternate;
+  }
+
+  .tile-zoom .initial { font-size: 36px; }
+  .tile-zoom .app-name { font-size: 11px; }
+
+  @keyframes tile-glow-orange {
+    0% { box-shadow: inset 0 0 25px rgba(230, 126, 34, 0.1); }
+    100% { box-shadow: inset 0 0 45px rgba(230, 126, 34, 0.2), 0 0 15px rgba(230, 126, 34, 0.06); }
+  }
+
+  /* iTerm2: 15% CPU, 180MB = MEDIUM, WARM YELLOW */
+  .tile-iterm {
+    grid-column: 1 / 5;
+    grid-row: 5 / 7;
+    background: linear-gradient(145deg, #c4a000 0%, #b8860b 60%, #a07000 100%);
+  }
+
+  .tile-iterm .initial { font-size: 24px; }
+
+  /* Slack: 12% CPU, 890MB = MEDIUM, WARM */
+  .tile-slack {
+    grid-column: 5 / 9;
+    grid-row: 5 / 7;
+    background: linear-gradient(145deg, #b8860b 0%, #a07000 50%, #8b6914 100%);
+  }
+
+  .tile-slack .initial { font-size: 22px; }
+
+  /* Spotify: 8% CPU, 378MB = SMALL-MED, COOL-WARM */
+  .tile-spotify {
+    grid-column: 7 / 10;
+    grid-row: 4 / 6;
+    background: linear-gradient(145deg, #2471a3 0%, #1a5276 60%, #1e3a5f 100%);
+  }
+
+  .tile-spotify .initial { font-size: 20px; }
+
+  /* Firefox: 7% CPU, 2.1GB = MEDIUM (high mem), WARM-COOL */
+  .tile-firefox {
+    grid-column: 10 / 13;
+    grid-row: 4 / 6;
+    background: linear-gradient(145deg, #2e86c1 0%, #2471a3 50%, #1a5276 100%);
+  }
+
+  .tile-firefox .initial { font-size: 18px; }
+
+  /* Activity Monitor: 2.7% CPU, 140MB = SMALL, COOL */
+  .tile-activity {
+    grid-column: 9 / 11;
+    grid-row: 6 / 8;
+    background: linear-gradient(145deg, #1a5276 0%, #154360 60%, #0d2847 100%);
+  }
+
+  .tile-activity .initial { font-size: 14px; }
+  .tile-activity .app-name { font-size: 8px; }
+
+  /* Finder: 0.3% CPU, 70MB = TINY, COLD */
+  .tile-finder {
+    grid-column: 11 / 13;
+    grid-row: 6 / 8;
+    background: linear-gradient(145deg, #154360 0%, #0d2847 60%, #091e36 100%);
+  }
+
+  .tile-finder .initial { font-size: 14px; }
+  .tile-finder .app-name { font-size: 8px; }
+
+  /* Remaining space fillers for visual balance */
+  .tile-bg1 {
+    grid-column: 1 / 5;
+    grid-row: 7 / 9;
+    background: linear-gradient(145deg, #1a5276 0%, #154360 50%, #0d2847 100%);
+  }
+
+  .tile-bg2 {
+    grid-column: 5 / 9;
+    grid-row: 7 / 9;
+    background: linear-gradient(145deg, #154360 0%, #0d2847 50%, #091e36 100%);
+  }
+
+  /* Small tile adjustments */
+  .tile-small .hover-overlay .hover-name { font-size: 10px; }
+  .tile-small .hover-overlay .hover-stats { font-size: 8px; }
+  .tile-small .hover-overlay .kill-btn { font-size: 8px; padding: 3px 10px; }
+
+  /* ── Legend ── */
+  .legend {
+    padding: 8px 16px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-label {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .legend-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg,
+      #091e36 0%,
+      #0d2847 10%,
+      #154360 20%,
+      #1a5276 30%,
+      #2471a3 40%,
+      #2e86c1 50%,
+      #c4a000 60%,
+      #d4a017 65%,
+      #e67e22 72%,
+      #d35400 80%,
+      #e63946 90%,
+      #ff1744 100%
+    );
+    box-shadow: 0 0 8px rgba(255, 23, 68, 0.15);
+  }
+
+  .legend-endpoints {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    padding: 8px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: auto;
+  }
+
+  .footer-left, .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-glass);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .footer-btn:hover {
+    background: var(--bg-glass-hover);
+    border-color: var(--border-glow);
+    color: var(--text-primary);
+  }
+
+  .process-count {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    letter-spacing: 0.3px;
+  }
+
+  .process-count strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .quit-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 23, 68, 0.2);
+    background: rgba(255, 23, 68, 0.08);
+    color: var(--kill-red);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .quit-btn:hover {
+    background: rgba(255, 23, 68, 0.15);
+    border-color: rgba(255, 23, 68, 0.35);
+  }
+
+  /* ── Kill confirmation modal ── */
+  .kill-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--popover-radius);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .kill-modal.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  .kill-modal-content {
+    background: rgba(28, 28, 46, 0.95);
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    max-width: 280px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  .kill-modal-content .skull {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .kill-modal-content h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .kill-modal-content p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .kill-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .kill-modal-actions button {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-cancel {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glow) !important;
+    color: var(--text-primary);
+  }
+
+  .btn-cancel:hover {
+    background: var(--bg-glass-hover);
+  }
+
+  .btn-kill-confirm {
+    background: var(--kill-red);
+    color: white;
+    box-shadow: 0 4px 16px rgba(255, 23, 68, 0.3);
+  }
+
+  .btn-kill-confirm:hover {
+    background: var(--kill-red-hover);
+    transform: scale(1.02);
+  }
+
+  /* ── Scanline overlay for thermal effect ── */
+  .scanline-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.02) 2px,
+      rgba(0,0,0,0.02) 4px
+    );
+    border-radius: var(--popover-radius);
+  }
+
+  /* ── Ambient heat shimmer ── */
+  @keyframes heat-shimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .heat-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(135deg,
+      rgba(220, 53, 69, 0.06) 0%,
+      rgba(230, 126, 34, 0.04) 30%,
+      rgba(196, 160, 0, 0.03) 60%,
+      transparent 100%
+    );
+    background-size: 200% 200%;
+    animation: heat-shimmer 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: var(--popover-radius) var(--popover-radius) 0 0;
+  }
+
+  /* ── Smooth appear animation ── */
+  @keyframes popover-in {
+    0% { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .popover {
+    animation: popover-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Tile appear stagger */
+  @keyframes tile-in {
+    0% { opacity: 0; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .tile {
+    animation: tile-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .tile:nth-child(1) { animation-delay: 0.05s; }
+  .tile:nth-child(2) { animation-delay: 0.1s; }
+  .tile:nth-child(3) { animation-delay: 0.15s; }
+  .tile:nth-child(4) { animation-delay: 0.2s; }
+  .tile:nth-child(5) { animation-delay: 0.25s; }
+  .tile:nth-child(6) { animation-delay: 0.3s; }
+  .tile:nth-child(7) { animation-delay: 0.35s; }
+  .tile:nth-child(8) { animation-delay: 0.4s; }
+
+  /* ── Thermal segment tooltip ── */
+  .thermal-segment[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(0,0,0,0.85);
+    color: var(--text-primary);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.15s ease;
+    font-family: var(--font-mono);
+    z-index: 20;
+  }
+
+  .thermal-segment:hover[data-tooltip]::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* ── Responsive details for large tiles ── */
+  .tile-chrome .hover-overlay .hover-name { font-size: 14px; }
+  .tile-chrome .hover-overlay .hover-stats { font-size: 11px; }
+  .tile-chrome .hover-overlay .kill-btn { font-size: 11px; padding: 6px 18px; }
+
+  .tile-zoom .hover-overlay .hover-name { font-size: 13px; }
+  .tile-zoom .hover-overlay .hover-stats { font-size: 10px; }
+  .tile-zoom .hover-overlay .kill-btn { font-size: 10px; padding: 5px 16px; }
+</style>
+</head>
+<body>
+
+  <div class="concept-header">
+    <div class="subtitle">Concept D</div>
+    <h1>Resource Heatmap</h1>
+    <p>
+      A thermal-camera inspired interface where every process is a heat tile sized by resource consumption and colored by threat level. No lists, no tables — just an instant visual readout of system health. Dominant processes blaze red and large; idle ones shrink to cool blue specks. Hover to inspect, click to kill.
+    </p>
+  </div>
+
+  <div class="popover">
+    <div class="popover-arrow"></div>
+    <div class="heat-bg"></div>
+    <div class="scanline-overlay"></div>
+
+    <!-- Thermal Overview -->
+    <div class="thermal-overview">
+      <div class="thermal-label">
+        <div class="dot"></div>
+        <span>Thermal Overview</span>
+      </div>
+      <div class="thermal-bar">
+        <div class="thermal-segment" style="flex: 45; background: linear-gradient(90deg, #e63946, #c0392b);" data-tooltip="Chrome 45%">
+          <span class="seg-label">Chrome</span>
+        </div>
+        <div class="thermal-segment" style="flex: 35; background: linear-gradient(90deg, #e67e22, #d35400);" data-tooltip="Zoom 35%">
+          <span class="seg-label">Zoom</span>
+        </div>
+        <div class="thermal-segment" style="flex: 15; background: linear-gradient(90deg, #c4a000, #b8860b);" data-tooltip="iTerm2 15%">
+          <span class="seg-label">iTerm2</span>
+        </div>
+        <div class="thermal-segment" style="flex: 12; background: linear-gradient(90deg, #b8860b, #a07000);" data-tooltip="Slack 12%">
+          <span class="seg-label">Slack</span>
+        </div>
+        <div class="thermal-segment" style="flex: 8; background: linear-gradient(90deg, #2471a3, #1a5276);" data-tooltip="Spotify 8%">
+          <span class="seg-label">Sp</span>
+        </div>
+        <div class="thermal-segment" style="flex: 7; background: linear-gradient(90deg, #2e86c1, #2471a3);" data-tooltip="Firefox 7%">
+          <span class="seg-label">Fx</span>
+        </div>
+        <div class="thermal-segment" style="flex: 3; background: linear-gradient(90deg, #1a5276, #154360);" data-tooltip="Activity Mon. 2.7%">
+        </div>
+        <div class="thermal-segment" style="flex: 1; background: linear-gradient(90deg, #154360, #0d2847);" data-tooltip="Finder 0.3%">
+        </div>
+      </div>
+      <div class="thermal-stats">
+        <span class="stat">CPU <strong>125.3%</strong></span>
+        <span class="sys-temp">72.4 C</span>
+        <span class="stat">MEM <strong>8.77 GB</strong></span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrapper">
+      <div class="search-box">
+        <span class="search-icon">&#x1F321;&#xFE0F;</span>
+        <input type="text" placeholder="Scan for heat..." readonly>
+        <span class="search-shortcut">/</span>
+      </div>
+    </div>
+
+    <!-- Heatmap Grid -->
+    <div class="heatmap-container">
+      <div class="heatmap-grid">
+
+        <!-- Chrome: 45% CPU, 3.2GB — BIGGEST, HOTTEST -->
+        <div class="tile tile-chrome" onclick="showKillModal('Chrome', 45, '3.2 GB', 28173)">
+          <span class="initial">C</span>
+          <span class="app-name">Chrome</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Google Chrome</span>
+            <span class="hover-stats">CPU 45.0% &middot; 3.2 GB<br>PID 28173</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Chrome', 45, '3.2 GB', 28173)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Zoom: 35% CPU, 1.8GB -->
+        <div class="tile tile-zoom" onclick="showKillModal('Zoom', 35, '1.8 GB', 51209)">
+          <span class="initial">Z</span>
+          <span class="app-name">Zoom</span>
+          <div class="hover-overlay">
+            <span class="hover-name">zoom.us</span>
+            <span class="hover-stats">CPU 35.0% &middot; 1.8 GB<br>PID 51209</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Zoom', 35, '1.8 GB', 51209)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- iTerm2: 15% CPU, 180MB -->
+        <div class="tile tile-iterm" onclick="showKillModal('iTerm2', 15, '180 MB', 1024)">
+          <span class="initial">iT</span>
+          <span class="app-name">iTerm2</span>
+          <div class="hover-overlay">
+            <span class="hover-name">iTerm2</span>
+            <span class="hover-stats">CPU 15.0% &middot; 180 MB<br>PID 1024</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('iTerm2', 15, '180 MB', 1024)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Slack: 12% CPU, 890MB -->
+        <div class="tile tile-slack" onclick="showKillModal('Slack', 12, '890 MB', 44821)">
+          <span class="initial">S</span>
+          <span class="app-name">Slack</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Slack</span>
+            <span class="hover-stats">CPU 12.0% &middot; 890 MB<br>PID 44821</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Slack', 12, '890 MB', 44821)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Spotify: 8% CPU, 378MB -->
+        <div class="tile tile-spotify" onclick="showKillModal('Spotify', 8, '378 MB', 30192)">
+          <span class="initial">Sp</span>
+          <span class="app-name">Spotify</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Spotify</span>
+            <span class="hover-stats">CPU 8.0% &middot; 378 MB<br>PID 30192</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Spotify', 8, '378 MB', 30192)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Firefox: 7% CPU, 2.1GB -->
+        <div class="tile tile-firefox" onclick="showKillModal('Firefox', 7, '2.1 GB', 27441)">
+          <span class="initial">Fx</span>
+          <span class="app-name">Firefox</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Firefox</span>
+            <span class="hover-stats">CPU 7.0% &middot; 2.1 GB<br>PID 27441</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Firefox', 7, '2.1 GB', 27441)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Activity Monitor: 2.7% CPU, 140MB -->
+        <div class="tile tile-activity tile-small" onclick="showKillModal('Activity Monitor', 2.7, '140 MB', 8821)">
+          <span class="initial">A</span>
+          <span class="app-name">Act. Mon.</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Activity Monitor</span>
+            <span class="hover-stats">CPU 2.7% &middot; 140 MB<br>PID 8821</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Activity Monitor', 2.7, '140 MB', 8821)">&#9760; Reap</button>
+          </div>
+        </div>
+
+        <!-- Finder: 0.3% CPU, 70MB -->
+        <div class="tile tile-finder tile-small" onclick="showKillModal('Finder', 0.3, '70 MB', 401)">
+          <span class="initial">F</span>
+          <span class="app-name">Finder</span>
+          <div class="hover-overlay">
+            <span class="hover-name">Finder</span>
+            <span class="hover-stats">CPU 0.3% &middot; 70 MB<br>PID 401</span>
+            <button class="kill-btn" onclick="event.stopPropagation(); showKillModal('Finder', 0.3, '70 MB', 401)">&#9760; Reap</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <span class="legend-label">Cold</span>
+      <div style="flex: 1;">
+        <div class="legend-bar"></div>
+        <div class="legend-endpoints">
+          <span>0%</span>
+          <span>Idle</span>
+          <span>Warm</span>
+          <span>Critical</span>
+          <span>100%+</span>
+        </div>
+      </div>
+      <span class="legend-label">Hot</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-left">
+        <button class="footer-btn" title="Settings">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="8" r="2.5"/>
+            <path d="M13.6 10a1.2 1.2 0 0 0 .24 1.32l.04.04a1.45 1.45 0 1 1-2.05 2.05l-.04-.04a1.2 1.2 0 0 0-1.32-.24 1.2 1.2 0 0 0-.73 1.1v.12a1.45 1.45 0 1 1-2.9 0v-.06a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.24l-.04.04a1.45 1.45 0 1 1-2.05-2.05l.04-.04A1.2 1.2 0 0 0 2.83 10a1.2 1.2 0 0 0-1.1-.73h-.12a1.45 1.45 0 0 1 0-2.9h.06a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.24-1.32l-.04-.04a1.45 1.45 0 1 1 2.05-2.05l.04.04A1.2 1.2 0 0 0 6 2.46V2.34a1.45 1.45 0 0 1 2.9 0v.06a1.2 1.2 0 0 0 .78 1.1 1.2 1.2 0 0 0 1.32-.24l.04-.04a1.45 1.45 0 1 1 2.05 2.05l-.04.04a1.2 1.2 0 0 0-.24 1.32v.06a1.2 1.2 0 0 0 1.1.78h.12a1.45 1.45 0 0 1 0 2.9h-.06a1.2 1.2 0 0 0-1.1.73z"/>
+          </svg>
+        </button>
+        <span class="process-count"><strong>8</strong> processes</span>
+      </div>
+      <div class="footer-right">
+        <button class="quit-btn">Quit Reaper</button>
+      </div>
+    </div>
+
+    <!-- Kill confirmation modal -->
+    <div class="kill-modal" id="killModal">
+      <div class="kill-modal-content">
+        <span class="skull">&#9760;</span>
+        <h3 id="killModalTitle">Reap Chrome?</h3>
+        <p id="killModalDesc">This will force-kill the process.<br>PID <span id="killModalPid">28173</span> &middot; <span id="killModalStats">45% CPU, 3.2 GB</span></p>
+        <div class="kill-modal-actions">
+          <button class="btn-cancel" onclick="hideKillModal()">Cancel</button>
+          <button class="btn-kill-confirm" onclick="confirmKill()">Reap It</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // Kill modal logic
+  function showKillModal(name, cpu, mem, pid) {
+    const modal = document.getElementById('killModal');
+    document.getElementById('killModalTitle').textContent = 'Reap ' + name + '?';
+    document.getElementById('killModalPid').textContent = pid;
+    document.getElementById('killModalStats').textContent = cpu + '% CPU, ' + mem;
+    modal.classList.add('visible');
+  }
+
+  function hideKillModal() {
+    document.getElementById('killModal').classList.remove('visible');
+  }
+
+  function confirmKill() {
+    const title = document.getElementById('killModalTitle').textContent;
+    hideKillModal();
+    // Visual feedback: briefly flash the popover
+    const popover = document.querySelector('.popover');
+    popover.style.boxShadow = '0 0 60px rgba(255, 23, 68, 0.3)';
+    setTimeout(() => {
+      popover.style.boxShadow = '';
+    }, 400);
+  }
+
+  // Close modal on background click
+  document.getElementById('killModal').addEventListener('click', function(e) {
+    if (e.target === this) hideKillModal();
+  });
+
+  // ESC to close modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideKillModal();
+  });
+</script>
+
+</body>
+</html>

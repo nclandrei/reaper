@@ -3,6 +3,27 @@ import XCTest
 
 final class MenuBarRendererTests: XCTestCase {
 
+    // MARK: - skull
+
+    func testSkullReturnsNonTemplateImage() {
+        let img = MenuBarRenderer.skull(fill: 0.5)
+        XCTAssertFalse(img.isTemplate)
+        XCTAssertEqual(img.size.width, 18, accuracy: 0.01)
+        XCTAssertEqual(img.size.height, 18, accuracy: 0.01)
+    }
+
+    func testSkullAtDifferentFills() {
+        // Green eyes
+        let low = MenuBarRenderer.skull(fill: 0.2)
+        XCTAssertFalse(low.isTemplate)
+        // Yellow eyes
+        let mid = MenuBarRenderer.skull(fill: 0.5)
+        XCTAssertFalse(mid.isTemplate)
+        // Red eyes
+        let high = MenuBarRenderer.skull(fill: 0.8)
+        XCTAssertFalse(high.isTemplate)
+    }
+
     // MARK: - pillBar
 
     func testPillBarReturnsTemplateImage() {

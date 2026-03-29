@@ -1,6 +1,7 @@
 import Foundation
 
 enum MenuBarStyle: String, CaseIterable, Identifiable {
+    case skull = "Skull"
     case pillBar = "Pill Bar"
     case segments = "Segments"
     case thinLine = "Thin Line"
@@ -13,6 +14,6 @@ enum MenuBarStyle: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    static var defaultForCPU: MenuBarStyle { .ringGauge }
-    static var defaultForMemory: MenuBarStyle { .pillBar }
+    static var defaultForCPU: MenuBarStyle { .skull }
+    static var defaultForMemory: MenuBarStyle { .skull }
 }

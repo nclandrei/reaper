@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaper UI Concept B — Hit List</title>
+<style>
+  /* ========== CSS Custom Properties ========== */
+  :root {
+    --bg-deep: #0a0a14;
+    --bg-panel: #0d0f1a;
+    --bg-card: #111528;
+    --bg-card-hover: #161b33;
+    --bg-input: rgba(255, 255, 255, 0.04);
+    --bg-input-focus: rgba(255, 255, 255, 0.07);
+
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(0, 210, 211, 0.15);
+    --border-danger: rgba(255, 59, 48, 0.25);
+
+    --red-primary: #ff3b30;
+    --red-glow: rgba(255, 59, 48, 0.3);
+    --red-bg: rgba(255, 59, 48, 0.08);
+    --red-hover: #ff5147;
+
+    --cyan-primary: #00d2d3;
+    --cyan-dim: #00a8a9;
+    --cyan-glow: rgba(0, 210, 211, 0.2);
+    --cyan-bg: rgba(0, 210, 211, 0.06);
+
+    --amber-primary: #ffb830;
+    --amber-bg: rgba(255, 184, 48, 0.08);
+
+    --text-primary: #e8eaf0;
+    --text-secondary: #8a8fa8;
+    --text-tertiary: #555a72;
+    --text-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', 'Consolas', monospace;
+    --text-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --text-tactical: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.4);
+    --shadow-wanted: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 59, 48, 0.15);
+    --shadow-glow-red: 0 0 20px rgba(255, 59, 48, 0.15), 0 0 40px rgba(255, 59, 48, 0.05);
+    --shadow-glow-cyan: 0 0 15px rgba(0, 210, 211, 0.1);
+
+    --transition-fast: 150ms ease;
+    --transition-med: 250ms ease;
+  }
+
+  /* ========== Reset & Base ========== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--text-ui);
+    background: #111;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ========== Concept Description ========== */
+  .concept-header {
+    max-width: 520px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .concept-header h1 {
+    font-family: var(--text-ui);
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .concept-header .subtitle {
+    font-family: var(--text-tactical);
+    font-size: 12px;
+    color: var(--cyan-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 14px;
+  }
+
+  .concept-header p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  /* ========== Popover Container ========== */
+  .popover {
+    width: 420px;
+    height: 560px;
+    background: var(--bg-panel);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-subtle);
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.6),
+      0 8px 30px rgba(0, 0, 0, 0.4),
+      0 0 1px rgba(255, 255, 255, 0.05) inset;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Scanline overlay */
+  .popover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-xl);
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 210, 211, 0.008) 2px,
+        rgba(0, 210, 211, 0.008) 4px
+      );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Subtle grid pattern */
+  .popover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-xl);
+    background-image:
+      linear-gradient(rgba(0, 210, 211, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 210, 211, 0.015) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 99;
+    opacity: 0.5;
+  }
+
+  /* ========== Header ========== */
+  .header {
+    padding: 14px 16px 0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .header-title h2 {
+    font-family: var(--text-tactical);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .header-title .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--red-primary);
+    box-shadow: 0 0 6px var(--red-glow);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .threat-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    background: var(--red-bg);
+    border: 1px solid var(--border-danger);
+    border-radius: 20px;
+    font-family: var(--text-tactical);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red-primary);
+    letter-spacing: 0.03em;
+  }
+
+  .threat-badge .icon {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+
+  .threat-badge .score {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* ========== System Stats Bar ========== */
+  .system-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: var(--bg-input);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    font-family: var(--text-tactical);
+    font-size: 10.5px;
+    color: var(--text-secondary);
+  }
+
+  .stat-chip .stat-icon {
+    font-size: 10px;
+  }
+
+  .stat-chip .stat-val {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .stat-chip.danger .stat-val {
+    color: var(--red-primary);
+  }
+
+  .stat-chip.warn .stat-val {
+    color: var(--amber-primary);
+  }
+
+  .stat-chip.ok .stat-val {
+    color: var(--cyan-primary);
+  }
+
+  /* ========== Search ========== */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .search-bar:focus-within {
+    border-color: var(--border-accent);
+    background: var(--bg-input-focus);
+  }
+
+  .search-icon {
+    color: var(--text-tertiary);
+    font-size: 13px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-tertiary);
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .search-bar input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--text-ui);
+    font-size: 12.5px;
+    color: var(--text-primary);
+  }
+
+  .search-bar input::placeholder {
+    color: var(--text-tertiary);
+    font-family: var(--text-ui);
+  }
+
+  .search-shortcut {
+    font-family: var(--text-tactical);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  /* ========== Divider ========== */
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 16px;
+    flex-shrink: 0;
+  }
+
+  /* ========== Scrollable Content ========== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px 12px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  .content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  /* ========== Section Label ========== */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+    margin-bottom: 8px;
+  }
+
+  .section-label span {
+    font-family: var(--text-tactical);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .section-label .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .section-label.danger span {
+    color: var(--red-primary);
+    opacity: 0.7;
+  }
+
+  /* ========== Most Wanted Cards ========== */
+  .wanted-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .wanted-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-danger);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-wanted);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+    overflow: hidden;
+  }
+
+  .wanted-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(255, 59, 48, 0.4);
+  }
+
+  /* Crosshair corner marks */
+  .wanted-card::before,
+  .wanted-card::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid rgba(255, 59, 48, 0.3);
+    pointer-events: none;
+  }
+
+  .wanted-card::before {
+    top: 5px;
+    left: 5px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .wanted-card::after {
+    top: 5px;
+    right: 5px;
+    border-left: none;
+    border-bottom: none;
+  }
+
+  .wanted-card .corner-bl,
+  .wanted-card .corner-br {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid rgba(255, 59, 48, 0.3);
+    pointer-events: none;
+  }
+
+  .wanted-card .corner-bl {
+    bottom: 5px;
+    left: 5px;
+    border-right: none;
+    border-top: none;
+  }
+
+  .wanted-card .corner-br {
+    bottom: 5px;
+    right: 5px;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Target/crosshair icon */
+  .wanted-rank {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 59, 48, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    background: rgba(255, 59, 48, 0.06);
+  }
+
+  .wanted-rank .crosshair {
+    position: absolute;
+    inset: -3px;
+  }
+
+  .wanted-rank .crosshair::before,
+  .wanted-rank .crosshair::after {
+    content: '';
+    position: absolute;
+  }
+
+  .wanted-rank .crosshair::before {
+    top: 50%;
+    left: -1px;
+    right: -1px;
+    height: 1px;
+    background: rgba(255, 59, 48, 0.25);
+  }
+
+  .wanted-rank .crosshair::after {
+    left: 50%;
+    top: -1px;
+    bottom: -1px;
+    width: 1px;
+    background: rgba(255, 59, 48, 0.25);
+  }
+
+  .wanted-rank .rank-num {
+    font-family: var(--text-tactical);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--red-primary);
+    z-index: 1;
+  }
+
+  .wanted-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .wanted-name {
+    font-family: var(--text-ui);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .wanted-name .pid {
+    font-family: var(--text-tactical);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+  }
+
+  .wanted-bounty {
+    font-family: var(--text-tactical);
+    font-size: 10.5px;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .wanted-bounty .label {
+    color: var(--text-tertiary);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+  }
+
+  .wanted-bounty .val-danger {
+    color: var(--red-primary);
+    font-weight: 600;
+  }
+
+  .wanted-bounty .sep {
+    color: var(--text-tertiary);
+    margin: 0 3px;
+  }
+
+  /* Threat meter for wanted cards */
+  .wanted-meter {
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 1px;
+    margin-top: 5px;
+    overflow: hidden;
+  }
+
+  .wanted-meter .fill {
+    height: 100%;
+    border-radius: 1px;
+    background: linear-gradient(90deg, var(--red-primary), #ff6b5a);
+    box-shadow: 0 0 6px var(--red-glow);
+    transition: width 0.5s ease;
+  }
+
+  /* Reap button on wanted cards */
+  .btn-reap {
+    padding: 6px 14px;
+    background: var(--red-primary);
+    color: #fff;
+    font-family: var(--text-tactical);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    box-shadow: 0 2px 8px var(--red-glow);
+  }
+
+  .btn-reap:hover {
+    background: var(--red-hover);
+    box-shadow: var(--shadow-glow-red);
+    transform: translateY(-1px);
+  }
+
+  .btn-reap:active {
+    transform: translateY(0);
+  }
+
+  /* ========== Batch Action ========== */
+  .batch-action {
+    padding: 0 4px;
+    margin-bottom: 12px;
+  }
+
+  .btn-batch {
+    width: 100%;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.12), rgba(255, 59, 48, 0.06));
+    border: 1px solid var(--border-danger);
+    border-radius: var(--radius-md);
+    color: var(--red-primary);
+    font-family: var(--text-tactical);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+  }
+
+  .btn-batch:hover {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.2), rgba(255, 59, 48, 0.1));
+    border-color: rgba(255, 59, 48, 0.4);
+    box-shadow: var(--shadow-glow-red);
+  }
+
+  .btn-batch .icon {
+    font-size: 13px;
+  }
+
+  .btn-batch .hint {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: rgba(255, 59, 48, 0.5);
+    margin-left: 4px;
+  }
+
+  /* ========== Compact List ========== */
+  .compact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .compact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+    cursor: default;
+  }
+
+  .compact-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .compact-rank {
+    font-family: var(--text-tactical);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    width: 18px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .compact-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .compact-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .compact-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .compact-name .pid {
+    font-family: var(--text-tactical);
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+  }
+
+  .compact-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .compact-stat {
+    font-family: var(--text-tactical);
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .compact-stat.high {
+    color: var(--amber-primary);
+  }
+
+  .compact-stat.low {
+    color: var(--text-tertiary);
+  }
+
+  /* Threat bar */
+  .threat-bar-container {
+    width: 44px;
+    flex-shrink: 0;
+  }
+
+  .threat-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 1.5px;
+    overflow: hidden;
+  }
+
+  .threat-bar .fill {
+    height: 100%;
+    border-radius: 1.5px;
+    transition: width 0.4s ease;
+  }
+
+  .threat-bar .fill.danger {
+    background: var(--red-primary);
+    box-shadow: 0 0 4px var(--red-glow);
+  }
+
+  .threat-bar .fill.warn {
+    background: var(--amber-primary);
+  }
+
+  .threat-bar .fill.low {
+    background: var(--cyan-primary);
+    opacity: 0.5;
+  }
+
+  .threat-bar .fill.idle {
+    background: var(--text-tertiary);
+    opacity: 0.3;
+  }
+
+  /* Small kill button for compact items */
+  .btn-kill-sm {
+    padding: 3px 8px;
+    background: rgba(255, 59, 48, 0.08);
+    border: 1px solid rgba(255, 59, 48, 0.15);
+    border-radius: var(--radius-sm);
+    color: var(--red-primary);
+    font-family: var(--text-tactical);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: all var(--transition-fast);
+  }
+
+  .compact-item:hover .btn-kill-sm {
+    opacity: 1;
+  }
+
+  .btn-kill-sm:hover {
+    background: rgba(255, 59, 48, 0.15);
+    border-color: rgba(255, 59, 48, 0.3);
+  }
+
+  /* Idle items have dimmer treatment */
+  .compact-item.idle {
+    opacity: 0.55;
+  }
+
+  .compact-item.idle:hover {
+    opacity: 0.8;
+  }
+
+  /* ========== Footer ========== */
+  .footer {
+    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .footer-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .footer-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .footer-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+  }
+
+  .footer-center {
+    flex: 1;
+    text-align: center;
+    font-family: var(--text-tactical);
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.03em;
+  }
+
+  .footer-quit {
+    font-family: var(--text-ui);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .footer-quit:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  /* ========== Arrow (menu bar popover arrow) ========== */
+  .popover-arrow {
+    width: 16px;
+    height: 8px;
+    margin: 0 auto 0;
+    position: relative;
+  }
+
+  .popover-arrow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--bg-panel);
+  }
+
+  /* ========== Animations ========== */
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  /* ========== Wanted card #1 special glow ========== */
+  .wanted-card.rank-1 {
+    box-shadow: var(--shadow-wanted), var(--shadow-glow-red);
+  }
+
+  .wanted-card.rank-1::before,
+  .wanted-card.rank-1::after {
+    border-color: rgba(255, 59, 48, 0.45);
+  }
+
+  .wanted-card.rank-1 .corner-bl,
+  .wanted-card.rank-1 .corner-br {
+    border-color: rgba(255, 59, 48, 0.45);
+  }
+
+  /* ========== Responsive edge-case: container centering ========== */
+  @media (max-width: 460px) {
+    .popover {
+      width: 100%;
+      max-width: 420px;
+      border-radius: var(--radius-lg);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Concept Description -->
+  <div class="concept-header">
+    <div class="subtitle">Concept B</div>
+    <h1>Hit List</h1>
+    <p>
+      A bounty-board approach to process management. Processes are ranked by a composite threat score
+      that combines CPU and memory usage, surfacing the worst offenders as "Most Wanted" targets with
+      prominent kill actions. The tactical HUD aesthetic makes resource reclamation feel decisive and
+      satisfying rather than administrative.
+    </p>
+  </div>
+
+  <!-- Popover Arrow -->
+  <div class="popover-arrow"></div>
+
+  <!-- Main Popover -->
+  <div class="popover">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div class="header-title">
+          <h2>Hit List</h2>
+          <div class="dot"></div>
+        </div>
+        <div class="threat-badge">
+          <span class="icon">&#9432;</span>
+          <span>THREAT</span>
+          <span class="score">78</span>
+          <span>/100</span>
+        </div>
+      </div>
+
+      <!-- System Stats -->
+      <div class="system-stats">
+        <div class="stat-chip danger">
+          <span class="stat-icon">&#9679;</span>
+          <span>CPU</span>
+          <span class="stat-val">72.3%</span>
+        </div>
+        <div class="stat-chip warn">
+          <span class="stat-icon">&#9679;</span>
+          <span>MEM</span>
+          <span class="stat-val">12.4 / 16 GB</span>
+        </div>
+        <div class="stat-chip ok">
+          <span class="stat-icon">&#9679;</span>
+          <span>SWAP</span>
+          <span class="stat-val">0 B</span>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><line x1="14.5" y1="14.5" x2="20" y2="20"/><line x1="10" y1="6" x2="10" y2="14" stroke-dasharray="1 3" opacity="0.3"/><line x1="6" y1="10" x2="14" y2="10" stroke-dasharray="1 3" opacity="0.3"/></svg>
+        </span>
+        <input type="text" placeholder="Search targets..." readonly>
+        <span class="search-shortcut">/</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Scrollable Content -->
+    <div class="content">
+
+      <!-- Most Wanted Section -->
+      <div class="section-label danger">
+        <span>&#9670; Most Wanted</span>
+        <div class="line"></div>
+      </div>
+
+      <div class="wanted-cards">
+
+        <!-- #1 Chrome -->
+        <div class="wanted-card rank-1">
+          <div class="corner-bl"></div>
+          <div class="corner-br"></div>
+          <div class="wanted-rank">
+            <div class="crosshair"></div>
+            <span class="rank-num">1</span>
+          </div>
+          <div class="wanted-info">
+            <div class="wanted-name">
+              Google Chrome
+              <span class="pid">PID 1284</span>
+            </div>
+            <div class="wanted-bounty">
+              <span class="label">BOUNTY</span>
+              <span class="val-danger">3.2 GB</span>
+              <span class="sep">+</span>
+              <span class="val-danger">45% CPU</span>
+            </div>
+            <div class="wanted-meter">
+              <div class="fill" style="width: 92%"></div>
+            </div>
+          </div>
+          <button class="btn-reap">REAP</button>
+        </div>
+
+        <!-- #2 Zoom -->
+        <div class="wanted-card rank-2">
+          <div class="corner-bl"></div>
+          <div class="corner-br"></div>
+          <div class="wanted-rank">
+            <div class="crosshair"></div>
+            <span class="rank-num">2</span>
+          </div>
+          <div class="wanted-info">
+            <div class="wanted-name">
+              Zoom
+              <span class="pid">PID 5831</span>
+            </div>
+            <div class="wanted-bounty">
+              <span class="label">BOUNTY</span>
+              <span class="val-danger">1.8 GB</span>
+              <span class="sep">+</span>
+              <span class="val-danger">35% CPU</span>
+            </div>
+            <div class="wanted-meter">
+              <div class="fill" style="width: 74%"></div>
+            </div>
+          </div>
+          <button class="btn-reap">REAP</button>
+        </div>
+
+        <!-- #3 iTerm2 -->
+        <div class="wanted-card rank-3">
+          <div class="corner-bl"></div>
+          <div class="corner-br"></div>
+          <div class="wanted-rank">
+            <div class="crosshair"></div>
+            <span class="rank-num">3</span>
+          </div>
+          <div class="wanted-info">
+            <div class="wanted-name">
+              iTerm2
+              <span class="pid">PID 892</span>
+            </div>
+            <div class="wanted-bounty">
+              <span class="label">BOUNTY</span>
+              <span>180 MB</span>
+              <span class="sep">+</span>
+              <span>15% CPU</span>
+            </div>
+            <div class="wanted-meter">
+              <div class="fill" style="width: 38%"></div>
+            </div>
+          </div>
+          <button class="btn-reap">REAP</button>
+        </div>
+
+      </div>
+
+      <!-- Batch Action -->
+      <div class="batch-action">
+        <button class="btn-batch">
+          <span class="icon">&#9760;</span>
+          REAP TOP 3
+          <span class="hint">&#8212; reclaim ~5.2 GB</span>
+        </button>
+      </div>
+
+      <!-- Remaining Targets -->
+      <div class="section-label" style="margin-top: 2px;">
+        <span>Remaining Targets</span>
+        <div class="line"></div>
+      </div>
+
+      <div class="compact-list">
+
+        <!-- #4 Slack -->
+        <div class="compact-item">
+          <span class="compact-rank">#4</span>
+          <div class="compact-icon">&#128172;</div>
+          <div class="compact-info">
+            <div class="compact-name">Slack <span class="pid">PID 2041</span></div>
+            <div class="compact-stats">
+              <span class="compact-stat high">12% CPU</span>
+              <span class="compact-stat">890 MB</span>
+            </div>
+          </div>
+          <div class="threat-bar-container">
+            <div class="threat-bar">
+              <div class="fill warn" style="width: 32%"></div>
+            </div>
+          </div>
+          <button class="btn-kill-sm">KILL</button>
+        </div>
+
+        <!-- #5 Spotify -->
+        <div class="compact-item">
+          <span class="compact-rank">#5</span>
+          <div class="compact-icon">&#9835;</div>
+          <div class="compact-info">
+            <div class="compact-name">Spotify <span class="pid">PID 3190</span></div>
+            <div class="compact-stats">
+              <span class="compact-stat">8% CPU</span>
+              <span class="compact-stat">378 MB</span>
+            </div>
+          </div>
+          <div class="threat-bar-container">
+            <div class="threat-bar">
+              <div class="fill warn" style="width: 22%"></div>
+            </div>
+          </div>
+          <button class="btn-kill-sm">KILL</button>
+        </div>
+
+        <!-- #6 Firefox -->
+        <div class="compact-item">
+          <span class="compact-rank">#6</span>
+          <div class="compact-icon">&#127760;</div>
+          <div class="compact-info">
+            <div class="compact-name">Firefox <span class="pid">PID 4502</span></div>
+            <div class="compact-stats">
+              <span class="compact-stat">7% CPU</span>
+              <span class="compact-stat">2.1 GB</span>
+            </div>
+          </div>
+          <div class="threat-bar-container">
+            <div class="threat-bar">
+              <div class="fill warn" style="width: 28%"></div>
+            </div>
+          </div>
+          <button class="btn-kill-sm">KILL</button>
+        </div>
+
+        <!-- #7 Activity Monitor -->
+        <div class="compact-item idle">
+          <span class="compact-rank">#7</span>
+          <div class="compact-icon">&#128200;</div>
+          <div class="compact-info">
+            <div class="compact-name">Activity Monitor <span class="pid">PID 7720</span></div>
+            <div class="compact-stats">
+              <span class="compact-stat low">2.7% CPU</span>
+              <span class="compact-stat low">140 MB</span>
+            </div>
+          </div>
+          <div class="threat-bar-container">
+            <div class="threat-bar">
+              <div class="fill low" style="width: 8%"></div>
+            </div>
+          </div>
+          <button class="btn-kill-sm">KILL</button>
+        </div>
+
+        <!-- #8 Finder -->
+        <div class="compact-item idle">
+          <span class="compact-rank">#8</span>
+          <div class="compact-icon">&#128193;</div>
+          <div class="compact-info">
+            <div class="compact-name">Finder <span class="pid">PID 410</span></div>
+            <div class="compact-stats">
+              <span class="compact-stat low">0.3% CPU</span>
+              <span class="compact-stat low">70 MB</span>
+            </div>
+          </div>
+          <div class="threat-bar-container">
+            <div class="threat-bar">
+              <div class="fill idle" style="width: 2%"></div>
+            </div>
+          </div>
+          <button class="btn-kill-sm">KILL</button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button class="footer-btn" title="Settings">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+      <span class="footer-center">8 processes tracked</span>
+      <button class="footer-quit">Quit Reaper</button>
+    </div>
+
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---- Search bar focus interaction ----
+  const searchInput = document.querySelector('.search-bar input');
+  if (searchInput) {
+    searchInput.removeAttribute('readonly');
+    const searchBar = searchInput.closest('.search-bar');
+
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      filterProcesses(query);
+    });
+
+    // Keyboard shortcut: "/" to focus search
+    document.addEventListener('keydown', function(e) {
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchInput.blur();
+        filterProcesses('');
+      }
+    });
+  }
+
+  function filterProcesses(query) {
+    // Filter wanted cards
+    const wantedCards = document.querySelectorAll('.wanted-card');
+    let visibleWanted = 0;
+    wantedCards.forEach(function(card) {
+      const name = card.querySelector('.wanted-name').textContent.toLowerCase();
+      const match = !query || name.includes(query);
+      card.style.display = match ? '' : 'none';
+      if (match) visibleWanted++;
+    });
+
+    // Filter compact items
+    const compactItems = document.querySelectorAll('.compact-item');
+    let visibleCompact = 0;
+    compactItems.forEach(function(item) {
+      const name = item.querySelector('.compact-name').textContent.toLowerCase();
+      const match = !query || name.includes(query);
+      item.style.display = match ? '' : 'none';
+      if (match) visibleCompact++;
+    });
+
+    // Show/hide section labels based on whether they have visible children
+    const wantedSection = document.querySelector('.section-label.danger');
+    const batchAction = document.querySelector('.batch-action');
+    if (wantedSection) wantedSection.style.display = visibleWanted > 0 ? '' : 'none';
+    if (batchAction) batchAction.style.display = visibleWanted > 0 && !query ? '' : 'none';
+
+    // Update count
+    const footerCenter = document.querySelector('.footer-center');
+    if (footerCenter) {
+      const total = visibleWanted + visibleCompact;
+      if (query) {
+        footerCenter.textContent = total + ' of 8 matching';
+      } else {
+        footerCenter.textContent = '8 processes tracked';
+      }
+    }
+  }
+
+  // ---- Button hover feedback ----
+  const reapButtons = document.querySelectorAll('.btn-reap, .btn-kill-sm');
+  reapButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const origText = this.textContent;
+      this.textContent = 'REAPED';
+      this.style.opacity = '0.5';
+      this.style.pointerEvents = 'none';
+
+      // Find and fade the parent process element
+      const card = this.closest('.wanted-card') || this.closest('.compact-item');
+      if (card) {
+        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        card.style.opacity = '0.15';
+        card.style.transform = 'translateX(10px)';
+      }
+
+      setTimeout(function() {
+        btn.textContent = origText;
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
+        if (card) {
+          card.style.opacity = '';
+          card.style.transform = '';
+        }
+      }, 1500);
+    });
+  });
+
+  // ---- Batch reap button ----
+  const batchBtn = document.querySelector('.btn-batch');
+  if (batchBtn) {
+    batchBtn.addEventListener('click', function() {
+      const origHTML = this.innerHTML;
+      this.innerHTML = '<span class="icon">&#10003;</span> TOP 3 REAPED';
+      this.style.borderColor = 'rgba(0, 210, 211, 0.3)';
+      this.style.color = 'var(--cyan-primary)';
+
+      const wantedCards = document.querySelectorAll('.wanted-card');
+      wantedCards.forEach(function(card, i) {
+        setTimeout(function() {
+          card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          card.style.opacity = '0.15';
+          card.style.transform = 'translateX(10px)';
+        }, i * 120);
+      });
+
+      setTimeout(function() {
+        batchBtn.innerHTML = origHTML;
+        batchBtn.style.borderColor = '';
+        batchBtn.style.color = '';
+        wantedCards.forEach(function(card) {
+          card.style.opacity = '';
+          card.style.transform = '';
+        });
+      }, 2000);
+    });
+  }
+
+  // ---- Threat score pulse animation ----
+  const threatScore = document.querySelector('.threat-badge .score');
+  if (threatScore) {
+    setInterval(function() {
+      const base = 78;
+      const jitter = Math.floor(Math.random() * 5) - 2; // -2 to +2
+      const clamped = Math.max(0, Math.min(100, base + jitter));
+      threatScore.textContent = clamped;
+    }, 3000);
+  }
+
+})();
+</script>
+
+</body>
+</html>

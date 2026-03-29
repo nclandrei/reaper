@@ -29,7 +29,7 @@
 	<key>SUFeedURL</key>
 	<string>https://nclandrei.github.io/reaper/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>SPARKLE_PUBLIC_EDDSA_KEY_PLACEHOLDER</string>
+	<string>SU4twrmGM15DiAOL4K8G2tkvBNzDlj3SBahqnwEqYxg=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 </dict>

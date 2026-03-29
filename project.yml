@@ -39,7 +39,7 @@ targets:
         CFBundleName: Reaper
         NSHumanReadableCopyright: "Copyright © 2024 Reaper. MIT License."
         SUFeedURL: "https://nclandrei.github.io/reaper/appcast.xml"
-        SUPublicEDKey: "SPARKLE_PUBLIC_EDDSA_KEY_PLACEHOLDER"
+        SUPublicEDKey: "SU4twrmGM15DiAOL4K8G2tkvBNzDlj3SBahqnwEqYxg="
         SUEnableAutomaticChecks: true
         SUScheduledCheckInterval: 86400
     settings:

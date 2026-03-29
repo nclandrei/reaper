@@ -36,10 +36,10 @@ enum ProcessKiller {
         let helpers = group.children.filter { $0.pid != group.id }
         let parent = group.children.first { $0.pid == group.id }
         for helper in helpers {
-            results[helper.pid] = quit(pid: helper.pid)
+            results[helper.pid] = forceKill(pid: helper.pid)
         }
         if let parent = parent {
-            results[parent.pid] = quit(pid: parent.pid)
+            results[parent.pid] = forceKill(pid: parent.pid)
         }
         return results
     }

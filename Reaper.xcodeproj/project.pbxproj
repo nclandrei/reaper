@@ -21,6 +21,12 @@
 		64B4191B733FE1823ECD0091 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132771EC7A1B088A383C73B0 /* HeaderView.swift */; };
 		BB22CC33DD44EE55FF66AA11 /* ThreatLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* ThreatLevel.swift */; };
 		DD44EE55FF66AA11BB22CC33 /* ThreatGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD44EE55FF66AA11BB22 /* ThreatGroupView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* HeatLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* HeatLevel.swift */; };
+		A1B2C3D4E5F60718293A4B6C /* HeatmapGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B6D /* HeatmapGridView.swift */; };
+		A1B2C3D4E5F60718293A4B7C /* HeatmapTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B7D /* HeatmapTileView.swift */; };
+		A1B2C3D4E5F60718293A4B8C /* ThermalOverviewBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B8D /* ThermalOverviewBar.swift */; };
+		A1B2C3D4E5F60718293A4B9C /* MenuBarStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B9D /* MenuBarStyle.swift */; };
+		A1B2C3D4E5F60718293A4BAC /* TileLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4BAD /* TileLayout.swift */; };
 		EE55FF66AA11BB22CC33DD44 /* CPUSmoothingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66AA11BB22CC33DD44EE55 /* CPUSmoothingTests.swift */; };
 		1166AA11BB22CC33DD44EE55 /* CPUSmoother.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2266AA11BB22CC33DD44EE55 /* CPUSmoother.swift */; };
 		70484DB2468B8E7E6DE097A2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D82BD2638571BB0DC4025FD /* ContentView.swift */; };
@@ -90,6 +96,12 @@
 		F04155E41B89E9D5B30CA78A /* ProcessGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessGroupTests.swift; sourceTree = "<group>"; };
 		F32CAE203CE1F840C1F9122B /* ProcessKiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessKiller.swift; sourceTree = "<group>"; };
 		F33E2B2FF6A3EF7B0F6FBF22 /* UpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* HeatLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatLevel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B6D /* HeatmapGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapGridView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B7D /* HeatmapTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapTileView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B8D /* ThermalOverviewBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalOverviewBar.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B9D /* MenuBarStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStyle.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4BAD /* TileLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileLayout.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,10 +120,13 @@
 		1B016BF4DAF9E6BCDDFB9B59 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F60718293A4B5D /* HeatLevel.swift */,
+				A1B2C3D4E5F60718293A4B9D /* MenuBarStyle.swift */,
 				DE9A1C3788BB71740BC36C0C /* ProcessGroup.swift */,
 				B984ADDBD7451A79B448B800 /* ProcessInfo.swift */,
 				D113CB18C4D129B687EDE091 /* SortOrder.swift */,
 				AA11BB22CC33DD44EE55FF66 /* ThreatLevel.swift */,
+				A1B2C3D4E5F60718293A4BAD /* TileLayout.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -192,10 +207,13 @@
 			children = (
 				8D82BD2638571BB0DC4025FD /* ContentView.swift */,
 				132771EC7A1B088A383C73B0 /* HeaderView.swift */,
+				A1B2C3D4E5F60718293A4B6D /* HeatmapGridView.swift */,
+				A1B2C3D4E5F60718293A4B7D /* HeatmapTileView.swift */,
 				BF7DA796F7F64C6204532D9A /* MenuBarLabel.swift */,
 				3D6AF2FCD45AFC0239D726AB /* ProcessGroupView.swift */,
 				41139568030E7AE7502FE8AC /* ProcessRowView.swift */,
 				B695AC99AF8F9A4052083D1C /* SettingsView.swift */,
+				A1B2C3D4E5F60718293A4B8D /* ThermalOverviewBar.swift */,
 				CC33DD44EE55FF66AA11BB22 /* ThreatGroupView.swift */,
 				5D1EF89AC4244AE096ED6B00 /* Components */,
 			);
@@ -353,6 +371,12 @@
 				DD44EE55FF66AA11BB22CC33 /* ThreatGroupView.swift in Sources */,
 				9883DE79CB938DF90524552E /* UpdaterService.swift in Sources */,
 				616CD58930A16F94235DBEF0 /* UsageBar.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* HeatLevel.swift in Sources */,
+				A1B2C3D4E5F60718293A4B6C /* HeatmapGridView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B7C /* HeatmapTileView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B8C /* ThermalOverviewBar.swift in Sources */,
+				A1B2C3D4E5F60718293A4B9C /* MenuBarStyle.swift in Sources */,
+				A1B2C3D4E5F60718293A4BAC /* TileLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

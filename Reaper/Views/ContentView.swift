@@ -7,37 +7,55 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(
-                searchText: $viewModel.searchText,
-                sortOrder: $viewModel.sortOrder,
+            // Thermal overview bar
+            ThermalOverviewBar(
+                groups: viewModel.appGroups,
                 systemStats: viewModel.systemStats
             )
 
-            Divider()
-                .opacity(0.2)
-                .padding(.horizontal, 16)
+            // Search
+            HStack(spacing: 8) {
+                Image(systemName: "thermometer.medium")
+                    .foregroundStyle(.white.opacity(0.35))
+                    .font(.system(size: 13))
+                TextField("Scan for heat...", text: $viewModel.searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
 
-            ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(viewModel.groups) { group in
-                        ProcessGroupView(
-                            group: group,
-                            isExpanded: viewModel.expandedGroups.contains(group.id),
-                            isSearching: !viewModel.searchText.isEmpty,
-                            onToggle: { viewModel.toggleExpanded(group.id) },
-                            onKill: { viewModel.killProcess(pid: $0) },
-                            onForceKill: { viewModel.forceKillProcess(pid: $0) },
-                            onKillGroup: { viewModel.killGroup(group) }
-                        )
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                Text("/")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.25))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(.white.opacity(0.08), lineWidth: 0.5)
+                    )
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.white.opacity(0.08), lineWidth: 1)
+            )
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
 
-            Divider()
-                .opacity(0.2)
-                .padding(.horizontal, 16)
+            // Heatmap grid
+            HeatmapGridView(
+                groups: viewModel.appGroups,
+                onKill: { viewModel.killProcess(pid: $0) },
+                onForceKill: { viewModel.forceKillProcess(pid: $0) },
+                onKillGroup: { viewModel.killGroup($0) }
+            )
+            .padding(.horizontal, 12)
+
+            // Legend
+            ThermalLegend()
 
             // Footer
             HStack {
@@ -46,7 +64,7 @@ struct ContentView: View {
                 } label: {
                     Image(systemName: "gear")
                         .font(.system(size: 14))
-                        .frame(width: 32, height: 32)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -67,17 +85,26 @@ struct ContentView: View {
                     NSApp.terminate(nil)
                 } label: {
                     Text("Quit Reaper")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(red: 1.0, green: 0.09, blue: 0.27))
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.white.opacity(0.06))
+                        .padding(.vertical, 5)
+                        .background(Color(red: 1.0, green: 0.09, blue: 0.27).opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color(red: 1.0, green: 0.09, blue: 0.27).opacity(0.2), lineWidth: 1)
+                        )
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(.white.opacity(0.06))
+                    .frame(height: 1)
+            }
         }
         .frame(width: 420, height: 560)
         .background(.ultraThinMaterial)

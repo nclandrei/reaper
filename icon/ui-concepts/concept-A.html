@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaper UI Concept A — Threat Dashboard</title>
+<style>
+  :root {
+    --bg-body: #111119;
+    --bg-popover: #1c1c2e;
+    --bg-glass: rgba(28, 28, 46, 0.85);
+    --bg-elevated: rgba(255, 255, 255, 0.04);
+    --bg-hover: rgba(255, 255, 255, 0.07);
+    --bg-search: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text-primary: #f0f0f5;
+    --text-secondary: rgba(240, 240, 245, 0.6);
+    --text-tertiary: rgba(240, 240, 245, 0.35);
+    --red: #ff453a;
+    --red-dim: rgba(255, 69, 58, 0.12);
+    --red-glow: rgba(255, 69, 58, 0.25);
+    --amber: #ffd60a;
+    --amber-dim: rgba(255, 214, 10, 0.10);
+    --green: #30d158;
+    --green-dim: rgba(48, 209, 88, 0.08);
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --font: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-xs: 4px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-body);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Concept Description ── */
+  .concept-info {
+    max-width: 480px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .concept-info h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .concept-info p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  /* ── Popover Shell ── */
+  .popover {
+    width: 420px;
+    height: 560px;
+    background: var(--bg-glass);
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.55),
+      0 0 0 0.5px rgba(255, 255, 255, 0.06) inset;
+    backdrop-filter: blur(60px) saturate(1.6);
+    -webkit-backdrop-filter: blur(60px) saturate(1.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Header: Gauge + Search ── */
+  .header {
+    padding: 16px 16px 12px;
+    flex-shrink: 0;
+  }
+
+  .gauge-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* Ring gauge via SVG */
+  .ring-wrap {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .ring-wrap svg {
+    width: 72px;
+    height: 72px;
+    transform: rotate(-90deg);
+  }
+  .ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 5;
+  }
+  .ring-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 183; /* 2 * pi * 29 ≈ 182.2 */
+    stroke-dashoffset: 55; /* ~70% filled */
+    transition: stroke-dashoffset 0.6s ease;
+  }
+  .ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.15;
+  }
+  .ring-label .pct {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--amber);
+  }
+  .ring-label .sub {
+    font-size: 8.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+
+  .threat-summary {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .threat-summary .title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .threat-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.01em;
+  }
+  .chip.critical {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  .chip.warning {
+    background: var(--amber-dim);
+    color: var(--amber);
+  }
+  .chip.clear {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+
+  .sys-stats {
+    display: flex;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .sys-stat {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .sys-stat .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Search bar */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    background: var(--bg-search);
+    border-radius: 8px;
+    border: 1px solid transparent;
+  }
+  .search-bar:focus-within {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .search-icon {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 12.5px;
+    font-family: var(--font);
+    color: var(--text-primary);
+    width: 100%;
+  }
+  .search-bar input::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 16px;
+    flex-shrink: 0;
+  }
+
+  /* ── Scrollable Process List ── */
+  .process-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .process-list::-webkit-scrollbar { width: 4px; }
+  .process-list::-webkit-scrollbar-track { background: transparent; }
+  .process-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  /* Section */
+  .section {
+    margin-bottom: 6px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    user-select: none;
+  }
+  .section-header:hover {
+    background: var(--bg-hover);
+  }
+  .section-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .section-header .label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: 1;
+  }
+  .section-header .count {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: var(--bg-elevated);
+    padding: 1px 6px;
+    border-radius: 8px;
+  }
+  .section-header .chevron {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    transition: transform 0.2s ease;
+  }
+  .section.collapsed .chevron {
+    transform: rotate(-90deg);
+  }
+  .section.collapsed .section-items {
+    display: none;
+  }
+
+  .section-items {
+    padding-left: 0;
+  }
+
+  /* Section color themes */
+  .section.critical .section-dot { background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+  .section.critical .label { color: var(--red); }
+  .section.warning .section-dot { background: var(--amber); }
+  .section.warning .label { color: var(--amber); }
+  .section.clear .section-dot { background: var(--green); }
+  .section.clear .label { color: var(--green); }
+
+  /* Process Row */
+  .process-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    position: relative;
+    border-left: 2.5px solid transparent;
+    margin-left: 2px;
+  }
+  .process-row:hover {
+    background: var(--bg-hover);
+  }
+  .section.critical .process-row {
+    border-left-color: var(--red);
+    background: var(--red-dim);
+  }
+  .section.critical .process-row:hover {
+    background: rgba(255, 69, 58, 0.18);
+  }
+  .section.warning .process-row {
+    border-left-color: var(--amber);
+    background: var(--amber-dim);
+  }
+  .section.warning .process-row:hover {
+    background: rgba(255, 214, 10, 0.16);
+  }
+  .section.clear .process-row {
+    border-left-color: var(--green);
+  }
+
+  /* Critical pulse animation */
+  .section.critical .process-row {
+    animation: critical-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes critical-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
+    50% { box-shadow: 0 0 12px 0 rgba(255, 69, 58, 0.12); }
+  }
+
+  .app-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: #fff;
+  }
+
+  .process-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .process-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .process-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 1px;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    padding: 1px 5px;
+    border-radius: var(--radius-xs);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+  }
+  .badge.hot {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--red);
+  }
+  .badge.warm {
+    background: rgba(255, 214, 10, 0.12);
+    color: var(--amber);
+  }
+  .badge.mem-high {
+    background: rgba(191, 90, 242, 0.12);
+    color: var(--purple);
+  }
+
+  /* Kill button */
+  .kill-btn {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .kill-btn.danger {
+    background: var(--red);
+    color: #fff;
+  }
+  .kill-btn.danger:hover {
+    background: #ff6961;
+    box-shadow: 0 0 12px rgba(255, 69, 58, 0.4);
+  }
+  .kill-btn.caution {
+    background: rgba(255, 214, 10, 0.18);
+    color: var(--amber);
+  }
+  .kill-btn.caution:hover {
+    background: rgba(255, 214, 10, 0.3);
+  }
+
+  /* Compact rows for clear section */
+  .section.clear .process-row {
+    padding: 4px 8px;
+  }
+  .section.clear .app-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    font-size: 10px;
+  }
+  .section.clear .process-name {
+    font-size: 11.5px;
+    font-weight: 500;
+  }
+  .section.clear .process-meta .badge {
+    font-size: 9.5px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    flex-shrink: 0;
+  }
+  .footer-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+  }
+  .footer-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+  .footer-center {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+  }
+  .quit-btn {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font);
+    color: var(--text-secondary);
+    background: var(--bg-elevated);
+    border: none;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+  }
+  .quit-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  /* SVG icons inline */
+  .icon-svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+</style>
+</head>
+<body>
+
+<div class="concept-info">
+  <h1>Concept A: Threat Dashboard</h1>
+  <p>
+    Processes are triaged into Critical, Warning, and Clear threat levels, placing the most dangerous resource hogs front and center with prominent kill actions. A ring gauge gives an instant read on overall system threat, so you know at a glance whether your Mac is under siege or running clean.
+  </p>
+</div>
+
+<div class="popover">
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="gauge-row">
+      <!-- Ring Gauge -->
+      <div class="ring-wrap">
+        <svg viewBox="0 0 64 64">
+          <circle class="ring-bg" cx="32" cy="32" r="29" />
+          <circle class="ring-fill" cx="32" cy="32" r="29"
+            stroke="url(#gaugeGrad)"
+            stroke-dasharray="182.2"
+            stroke-dashoffset="54.7" />
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="var(--green)" />
+              <stop offset="50%" stop-color="var(--amber)" />
+              <stop offset="100%" stop-color="var(--red)" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-label">
+          <span class="pct">70%</span>
+          <span class="sub">Threat</span>
+        </div>
+      </div>
+
+      <!-- Threat Summary -->
+      <div class="threat-summary">
+        <div class="title">System Under Load</div>
+        <div class="threat-chips">
+          <span class="chip critical">2 Critical</span>
+          <span class="chip warning">3 Warning</span>
+          <span class="chip clear">3 Clear</span>
+        </div>
+        <div class="sys-stats">
+          <span class="sys-stat"><span class="dot" style="background:var(--blue)"></span>CPU 124%</span>
+          <span class="sys-stat"><span class="dot" style="background:var(--purple)"></span>RAM 8.6 / 16 GB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <span class="search-icon">
+        <svg class="icon-svg" viewBox="0 0 20 20"><path d="M8.5 3a5.5 5.5 0 014.383 8.823l4.147 4.147a.75.75 0 01-1.06 1.06l-4.147-4.147A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z"/></svg>
+      </span>
+      <input type="text" placeholder="Search processes..." readonly>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── Process List ── -->
+  <div class="process-list">
+
+    <!-- CRITICAL Section -->
+    <div class="section critical">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="section-dot"></span>
+        <span class="label">Critical</span>
+        <span class="count">2</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="section-items">
+        <!-- Chrome -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #4285f4, #34a853);">C</div>
+          <div class="process-info">
+            <div class="process-name">Google Chrome</div>
+            <div class="process-meta">
+              <span class="badge hot">45.0% CPU</span>
+              <span class="badge mem-high">3.2 GB</span>
+            </div>
+          </div>
+          <button class="kill-btn danger">Kill</button>
+        </div>
+        <!-- Zoom -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #2d8cff, #0b5cff);">Z</div>
+          <div class="process-info">
+            <div class="process-name">Zoom</div>
+            <div class="process-meta">
+              <span class="badge hot">35.0% CPU</span>
+              <span class="badge mem-high">1.8 GB</span>
+            </div>
+          </div>
+          <button class="kill-btn danger">Kill</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNING Section -->
+    <div class="section warning">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="section-dot"></span>
+        <span class="label">Warning</span>
+        <span class="count">3</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="section-items">
+        <!-- iTerm2 -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #2d2d2d, #4a4a4a);">i</div>
+          <div class="process-info">
+            <div class="process-name">iTerm2</div>
+            <div class="process-meta">
+              <span class="badge warm">15.0% CPU</span>
+              <span class="badge">180 MB</span>
+            </div>
+          </div>
+          <button class="kill-btn caution">Kill</button>
+        </div>
+        <!-- Slack -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #611f69, #e01e5a);">S</div>
+          <div class="process-info">
+            <div class="process-name">Slack</div>
+            <div class="process-meta">
+              <span class="badge warm">12.0% CPU</span>
+              <span class="badge mem-high">890 MB</span>
+            </div>
+          </div>
+          <button class="kill-btn caution">Kill</button>
+        </div>
+        <!-- Spotify -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #1db954, #191414);">S</div>
+          <div class="process-info">
+            <div class="process-name">Spotify</div>
+            <div class="process-meta">
+              <span class="badge">8.0% CPU</span>
+              <span class="badge">378 MB</span>
+            </div>
+          </div>
+          <button class="kill-btn caution">Kill</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLEAR Section -->
+    <div class="section clear">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="section-dot"></span>
+        <span class="label">Clear</span>
+        <span class="count">3</span>
+        <span class="chevron">&#9662;</span>
+      </div>
+      <div class="section-items">
+        <!-- Firefox -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #ff9500, #e66000);">F</div>
+          <div class="process-info">
+            <div class="process-name">Firefox</div>
+            <div class="process-meta">
+              <span class="badge">7.0% CPU</span>
+              <span class="badge mem-high">2.1 GB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Activity Monitor -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #30d158, #248a3d);">A</div>
+          <div class="process-info">
+            <div class="process-name">Activity Monitor</div>
+            <div class="process-meta">
+              <span class="badge">2.7% CPU</span>
+              <span class="badge">140 MB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Finder -->
+        <div class="process-row">
+          <div class="app-icon" style="background: linear-gradient(135deg, #5ac8fa, #007aff);">F</div>
+          <div class="process-info">
+            <div class="process-name">Finder</div>
+            <div class="process-meta">
+              <span class="badge">0.3% CPU</span>
+              <span class="badge">70 MB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <button class="footer-btn" title="Settings">
+      <svg class="icon-svg" viewBox="0 0 20 20"><path d="M11.078 0c.294 0 .557.183.656.46l.573 1.606c.373.15.73.332 1.065.545l1.65-.393a.688.688 0 01.735.293l1.078 1.868a.688.688 0 01-.08.795l-1.077 1.213c.058.39.088.786.088 1.188s-.03.798-.088 1.188l1.077 1.213a.688.688 0 01.08.795l-1.078 1.868a.688.688 0 01-.735.293l-1.65-.393c-.336.213-.692.395-1.065.545l-.573 1.606a.688.688 0 01-.656.46H8.922a.688.688 0 01-.656-.46l-.573-1.606a6.68 6.68 0 01-1.065-.545l-1.65.393a.688.688 0 01-.735-.293L3.166 10.97a.688.688 0 01.08-.795l1.077-1.213A6.753 6.753 0 014.234 7.775c0-.402.03-.798.088-1.188L3.246 5.374a.688.688 0 01-.08-.795l1.078-1.868a.688.688 0 01.735-.293l1.65.393c.336-.213.692-.395 1.065-.545L8.266.46A.688.688 0 018.922 0h2.156zM10 6.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/></svg>
+    </button>
+    <span class="footer-center">8 processes</span>
+    <button class="quit-btn">Quit Reaper</button>
+  </div>
+</div>
+
+</body>
+</html>

@@ -4,10 +4,7 @@ import KeyboardShortcuts
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @ObservedObject var updaterService: UpdaterService
-    @AppStorage("menuBarMetric") private var menuBarMetric: String = MenuBarMetric.memory.rawValue
-    @AppStorage("cpuStyle") private var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
-    @AppStorage("memoryStyle") private var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
-    @AppStorage("hideMenuBarText") private var hideMenuBarText: Bool = false
+    @AppStorage("menuBarStyle") private var menuBarStyle: String = MenuBarStyle.skull.rawValue
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -16,35 +13,18 @@ struct SettingsView: View {
 
             Divider()
 
-            // Metric toggle
+            // Indicator style
             HStack {
-                Text("Menu bar shows")
+                Text("Menu bar icon")
                     .font(.system(size: 12))
                 Spacer()
-                Picker("", selection: $menuBarMetric) {
-                    ForEach(MenuBarMetric.allCases) { metric in
-                        Text(metric.rawValue).tag(metric.rawValue)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 130)
-            }
-
-            // Style picker for active metric
-            HStack {
-                Text(menuBarMetric == MenuBarMetric.cpu.rawValue ? "CPU indicator" : "Memory indicator")
-                    .font(.system(size: 12))
-                Spacer()
-                Picker("", selection: menuBarMetric == MenuBarMetric.cpu.rawValue ? $cpuStyle : $memoryStyle) {
+                Picker("", selection: $menuBarStyle) {
                     ForEach(MenuBarStyle.allCases) { style in
                         Text(style.rawValue).tag(style.rawValue)
                     }
                 }
                 .frame(width: 140)
             }
-
-            Toggle("Hide text in menu bar", isOn: $hideMenuBarText)
-                .font(.system(size: 12))
 
             // Hotkey recorder
             HStack {

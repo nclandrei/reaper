@@ -19,10 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let updaterService = UpdaterService()
     private var eventMonitor: Any?
 
-    @AppStorage("menuBarMetric") var menuBarMetric: String = MenuBarMetric.memory.rawValue
-    @AppStorage("cpuStyle") var cpuStyle: String = MenuBarStyle.defaultForCPU.rawValue
-    @AppStorage("memoryStyle") var memoryStyle: String = MenuBarStyle.defaultForMemory.rawValue
-    @AppStorage("hideMenuBarText") var hideMenuBarText: Bool = false
+    @AppStorage("menuBarStyle") var menuBarStyleRaw: String = MenuBarStyle.skull.rawValue
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Status item
@@ -73,55 +70,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateLabel() {
         guard let button = statusItem.button else { return }
 
-        let metric = MenuBarMetric(rawValue: menuBarMetric) ?? .memory
-        let styleRaw = metric == .cpu ? cpuStyle : memoryStyle
-        let style = MenuBarStyle(rawValue: styleRaw) ?? (metric == .cpu ? .defaultForCPU : .defaultForMemory)
+        let style = MenuBarStyle(rawValue: menuBarStyleRaw) ?? .skull
         let stats = viewModel.systemStats
-
-        // Indicator image
-        let fill: Double
-        switch metric {
-        case .cpu: fill = min(1, max(0, stats.totalCPU / 100.0))
-        case .memory: fill = stats.totalMemory > 0 ? min(1, Double(stats.usedMemory) / Double(stats.totalMemory)) : 0
-        }
+        let fill = min(1, max(0, stats.totalCPU / 100.0))
 
         switch style {
+        case .skull:      button.image = MenuBarRenderer.skull(fill: fill)
         case .pillBar:    button.image = MenuBarRenderer.pillBar(fill: fill)
         case .segments:   button.image = MenuBarRenderer.segments(fill: fill)
         case .thinLine:   button.image = MenuBarRenderer.thinLine(fill: fill)
         case .ringGauge:  button.image = MenuBarRenderer.ringGauge(fill: fill)
         case .battery:    button.image = MenuBarRenderer.battery(fill: fill)
         case .dots:       button.image = MenuBarRenderer.dots(fill: fill)
-        case .miniBars:
-            let history = metric == .cpu ? viewModel.cpuHistory : viewModel.memoryHistory
-            button.image = MenuBarRenderer.miniBars(samples: history)
-        case .dualStack:
-            let cpuFill = min(1, max(0, stats.totalCPU / 100.0))
-            let memFill = stats.totalMemory > 0 ? min(1, Double(stats.usedMemory) / Double(stats.totalMemory)) : 0
-            button.image = MenuBarRenderer.dualStack(cpu: cpuFill, mem: memFill)
-        case .textOnly:
-            button.image = nil
+        case .miniBars:   button.image = MenuBarRenderer.miniBars(samples: viewModel.cpuHistory)
+        case .dualStack:  button.image = MenuBarRenderer.dualStack(cpu: fill, mem: 0)
+        case .textOnly:   button.image = nil
         }
 
-        // Text
-        if hideMenuBarText && style != .textOnly {
+        // Skull shows no text, others show CPU%
+        if style == .skull {
             button.title = ""
+        } else if style == .textOnly {
+            button.title = "\(Int(stats.totalCPU))%"
         } else {
-            switch style {
-            case .dualStack:
-                button.title = " \(Int(stats.totalCPU))% \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
-            case .textOnly:
-                if metric == .cpu {
-                    button.title = "\(Int(stats.totalCPU))%  \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
-                } else {
-                    button.title = "\(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))  \(Int(stats.totalCPU))%"
-                }
-            default:
-                switch metric {
-                case .cpu:    button.title = " \(Int(stats.totalCPU))%"
-                case .memory: button.title = " \(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))"
-                }
-            }
+            button.title = " \(Int(stats.totalCPU))%"
         }
 
         button.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .medium)

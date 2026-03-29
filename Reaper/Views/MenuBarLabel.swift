@@ -1,100 +1,6 @@
 import SwiftUI
 import AppKit
 
-enum MenuBarMetric: String, CaseIterable, Identifiable {
-    case memory = "Memory"
-    case cpu = "CPU"
-
-    var id: String { rawValue }
-}
-
-struct MenuBarLabel: View {
-    let stats: SystemStats
-    let metric: MenuBarMetric
-    let style: MenuBarStyle
-    let cpuHistory: [Double]
-    let memoryHistory: [Double]
-
-    private var fillPercent: Double {
-        switch metric {
-        case .cpu: return min(1.0, max(0.0, stats.totalCPU / 100.0))
-        case .memory:
-            guard stats.totalMemory > 0 else { return 0 }
-            return min(1.0, Double(stats.usedMemory) / Double(stats.totalMemory))
-        }
-    }
-
-    private var history: [Double] {
-        metric == .cpu ? cpuHistory : memoryHistory
-    }
-
-    var body: some View {
-        HStack(spacing: 7) {
-            if style != .textOnly && style != .dualStack {
-                Image(nsImage: renderIndicator())
-            }
-
-            if style == .dualStack {
-                Image(nsImage: MenuBarRenderer.dualStack(
-                    cpu: min(1, max(0, stats.totalCPU / 100.0)),
-                    mem: stats.totalMemory > 0 ? min(1, Double(stats.usedMemory) / Double(stats.totalMemory)) : 0
-                ))
-                Text("\(Int(stats.totalCPU))%")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .monospacedDigit()
-                Text(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .monospacedDigit()
-            } else if style == .textOnly {
-                switch metric {
-                case .cpu:
-                    Text("\(Int(stats.totalCPU))%")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .monospacedDigit()
-                    Text(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))
-                        .font(.system(size: 11, design: .monospaced))
-                        .monospacedDigit()
-                        .opacity(0.5)
-                case .memory:
-                    Text(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .monospacedDigit()
-                    Text("\(Int(stats.totalCPU))%")
-                        .font(.system(size: 11, design: .monospaced))
-                        .monospacedDigit()
-                        .opacity(0.5)
-                }
-            } else {
-                switch metric {
-                case .memory:
-                    Text(Formatters.memoryShort(used: stats.usedMemory, total: stats.totalMemory))
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .monospacedDigit()
-                case .cpu:
-                    Text("\(Int(stats.totalCPU))%")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .monospacedDigit()
-                }
-            }
-        }
-    }
-
-    private func renderIndicator() -> NSImage {
-        let fill = fillPercent
-        switch style {
-        case .pillBar:    return MenuBarRenderer.pillBar(fill: fill)
-        case .segments:   return MenuBarRenderer.segments(fill: fill)
-        case .thinLine:   return MenuBarRenderer.thinLine(fill: fill)
-        case .ringGauge:  return MenuBarRenderer.ringGauge(fill: fill)
-        case .battery:    return MenuBarRenderer.battery(fill: fill)
-        case .dots:       return MenuBarRenderer.dots(fill: fill)
-        case .miniBars:   return MenuBarRenderer.miniBars(samples: history)
-        case .dualStack, .textOnly:
-            return NSImage()
-        }
-    }
-}
-
 // MARK: - Renderer
 
 enum MenuBarRenderer {
@@ -122,6 +28,79 @@ enum MenuBarRenderer {
 
     private static let dim: CGFloat = 0.25
     private static let bright: CGFloat = 1.0
+
+    // Skull with colored eyes
+    static func skull(fill: Double) -> NSImage {
+        let size: CGFloat = 18
+        guard let (ctx, w, h) = makeContext(w: size, h: size) else { return NSImage() }
+
+        // Eye color: green (<40%), yellow (40-70%), red (>70%)
+        let eyeColor: CGColor
+        if fill > 0.7 {
+            eyeColor = CGColor(red: 0.90, green: 0.22, blue: 0.27, alpha: 1.0)
+        } else if fill > 0.4 {
+            eyeColor = CGColor(red: 0.90, green: 0.75, blue: 0.10, alpha: 1.0)
+        } else {
+            eyeColor = CGColor(red: 0.30, green: 0.78, blue: 0.40, alpha: 1.0)
+        }
+
+        // Skull outline - cranium (top rounded part)
+        let craniumRect = CGRect(x: 2, y: 5, width: 14, height: 11)
+        ctx.setFillColor(CGColor(gray: 1, alpha: 0.9))
+        ctx.addEllipse(in: craniumRect)
+        ctx.fillPath()
+
+        // Jaw (narrower bottom rectangle with rounded bottom)
+        let jawPath = CGMutablePath()
+        jawPath.addRoundedRect(in: CGRect(x: 4.5, y: 1, width: 9, height: 6), cornerWidth: 2, cornerHeight: 2)
+        ctx.addPath(jawPath)
+        ctx.fillPath()
+
+        // Left eye socket
+        ctx.setFillColor(eyeColor)
+        ctx.addEllipse(in: CGRect(x: 5, y: 9, width: 3.5, height: 3.5))
+        ctx.fillPath()
+
+        // Right eye socket
+        ctx.addEllipse(in: CGRect(x: 9.5, y: 9, width: 3.5, height: 3.5))
+        ctx.fillPath()
+
+        // Nose (small inverted triangle)
+        ctx.setFillColor(CGColor(srgbRed: 0.12, green: 0.12, blue: 0.20, alpha: 1.0))
+        ctx.move(to: CGPoint(x: 8, y: 7))
+        ctx.addLine(to: CGPoint(x: 9.5, y: 7))
+        ctx.addLine(to: CGPoint(x: 8.75, y: 8.2))
+        ctx.closePath()
+        ctx.fillPath()
+
+        // Teeth lines
+        ctx.setStrokeColor(CGColor(srgbRed: 0.12, green: 0.12, blue: 0.20, alpha: 0.6))
+        ctx.setLineWidth(0.6)
+        for x in stride(from: 6.0, through: 12.0, by: 1.5) {
+            ctx.move(to: CGPoint(x: x, y: 1.5))
+            ctx.addLine(to: CGPoint(x: x, y: 5.5))
+        }
+        ctx.strokePath()
+
+        // Eye glow for red/yellow states
+        if fill > 0.4 {
+            ctx.setFillColor(CGColor(
+                red: fill > 0.7 ? 0.90 : 0.90,
+                green: fill > 0.7 ? 0.22 : 0.75,
+                blue: fill > 0.7 ? 0.27 : 0.10,
+                alpha: 0.3
+            ))
+            ctx.addEllipse(in: CGRect(x: 3.5, y: 7.5, width: 6, height: 6))
+            ctx.fillPath()
+            ctx.addEllipse(in: CGRect(x: 8, y: 7.5, width: 6, height: 6))
+            ctx.fillPath()
+        }
+
+        guard let cg = ctx.makeImage() else { return NSImage() }
+        let img = NSImage(cgImage: cg, size: NSSize(width: w, height: h))
+        img.isTemplate = false
+        return img
+    }
 
     // A: Pill Bar
     static func pillBar(fill: Double) -> NSImage {

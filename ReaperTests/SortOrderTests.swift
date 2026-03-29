@@ -5,7 +5,8 @@ final class SortOrderTests: XCTestCase {
 
     func testAllCasesExist() {
         let cases = SortOrder.allCases
-        XCTAssertEqual(cases.count, 3)
+        XCTAssertEqual(cases.count, 4)
+        XCTAssertTrue(cases.contains(.threat))
         XCTAssertTrue(cases.contains(.cpu))
         XCTAssertTrue(cases.contains(.memory))
         XCTAssertTrue(cases.contains(.name))

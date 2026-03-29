@@ -106,6 +106,23 @@ final class ProcessGroupTests: XCTestCase {
         XCTAssertEqual(group.helperCount, 0)
     }
 
+    // MARK: - isBackground
+
+    func testIsBackgroundTrueForSentinelID() {
+        let group = ProcessGroup(id: -1, name: "Background", icon: nil, children: [
+            makeProcess(pid: 100, cpu: 30.0, memory: 5_000_000_000),
+            makeProcess(pid: 101, cpu: 49.0, memory: 6_000_000_000),
+        ], isApp: false)
+        XCTAssertTrue(group.isBackground)
+    }
+
+    func testIsBackgroundFalseForNormalGroup() {
+        let group = ProcessGroup(id: 42, name: "Firefox", icon: nil, children: [
+            makeProcess(pid: 42, cpu: 10.0),
+        ], isApp: true)
+        XCTAssertFalse(group.isBackground)
+    }
+
     // MARK: - Identifiable
 
     func testIdentifiableID() {

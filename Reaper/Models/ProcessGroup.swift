@@ -18,4 +18,8 @@ struct ProcessGroup: Identifiable {
     var helperCount: Int {
         max(0, children.count - 1)
     }
+
+    var isBackground: Bool {
+        id == -1
+    }
 }

@@ -64,13 +64,19 @@ struct ProcessGroupView: View {
 
                 // Stats
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text(Formatters.cpu(group.totalCPU))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundStyle(group.totalCPU > 50 ? .orange : .secondary)
+                    if group.isBackground {
+                        Text("\(group.children.count) processes")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        Text(Formatters.cpu(group.totalCPU))
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundStyle(group.totalCPU > 50 ? .orange : .secondary)
 
-                    Text(Formatters.memory(group.totalMemory))
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(.tertiary)
+                        Text(Formatters.memory(group.totalMemory))
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                    }
                 }
                 .frame(width: 70, alignment: .trailing)
 

@@ -1,9 +1,12 @@
 import Foundation
+import os
 import Sparkle
 
+private let logger = Logger(subsystem: "com.reaper.app", category: "Updater")
+
 @MainActor
-final class UpdaterService: ObservableObject {
-    private let updaterController: SPUStandardUpdaterController?
+final class UpdaterService: NSObject, ObservableObject, SPUUpdaterDelegate {
+    private var updaterController: SPUStandardUpdaterController?
 
     @Published var canCheckForUpdates = false
 
@@ -16,30 +19,44 @@ final class UpdaterService: ObservableObject {
         set { updaterController?.updater.automaticallyChecksForUpdates = newValue }
     }
 
-    init() {
+    override init() {
+        super.init()
+
         let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String ?? ""
         let hasValidKey = !key.isEmpty && !key.contains("PLACEHOLDER")
 
         if hasValidKey {
             let controller = SPUStandardUpdaterController(
                 startingUpdater: true,
-                updaterDelegate: nil,
+                updaterDelegate: self,
                 userDriverDelegate: nil
             )
             self.updaterController = controller
-            // Ensure automatic checks default to ON; Sparkle may default to false
-            // until the user has explicitly changed the preference.
             if UserDefaults.standard.object(forKey: "SUEnableAutomaticChecks") == nil {
                 controller.updater.automaticallyChecksForUpdates = true
             }
             controller.updater.publisher(for: \.canCheckForUpdates)
                 .assign(to: &$canCheckForUpdates)
         } else {
-            self.updaterController = nil
+            logger.error("Sparkle updater NOT initialized – SUPublicEDKey is missing or placeholder")
         }
     }
 
     func checkForUpdates() {
         updaterController?.checkForUpdates(nil)
+    }
+
+    // MARK: - SPUUpdaterDelegate
+
+    nonisolated func updater(_ updater: SPUUpdater, didAbortWithError error: any Error) {
+        logger.error("Sparkle aborted: \(error.localizedDescription, privacy: .public)")
+    }
+
+    nonisolated func updater(_ updater: SPUUpdater, didFinishUpdateCycleFor updateCheck: SPUUpdateCheck, error: (any Error)?) {
+        if let error {
+            logger.error("Sparkle update cycle error: \(error.localizedDescription, privacy: .public)")
+        } else {
+            logger.info("Sparkle update cycle finished OK")
+        }
     }
 }

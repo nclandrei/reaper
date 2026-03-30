@@ -21,7 +21,7 @@ final class ProcessListViewModel: ObservableObject {
     private var timer: Timer?
     private let ownPID = getpid()
 
-    @AppStorage("refreshInterval") var refreshInterval: Double = 3.0 {
+    @AppStorage("refreshInterval") var refreshInterval: Double = 2.0 {
         didSet { startTimer() }
     }
 

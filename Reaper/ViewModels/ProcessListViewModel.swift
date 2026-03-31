@@ -74,7 +74,7 @@ final class ProcessListViewModel: ObservableObject {
     }
 
     func killProcess(pid: pid_t) {
-        _ = ProcessKiller.quit(pid: pid)
+        _ = ProcessKiller.forceKill(pid: pid)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.refresh()
         }

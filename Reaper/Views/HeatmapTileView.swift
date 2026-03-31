@@ -94,11 +94,7 @@ struct HeatmapTileView: View {
                             }
 
                             Button {
-                                if group.children.count == 1 {
-                                    onKill(group.children[0].pid)
-                                } else {
-                                    onKillGroup()
-                                }
+                                onKillGroup()
                             } label: {
                                 HStack(spacing: 4) {
                                     Text("☠")

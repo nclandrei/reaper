@@ -15,7 +15,7 @@
 		325F61C9C0F16F7725DE8B60 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019E2E8BEFB3D6EDC7D2694F /* SettingsViewModel.swift */; };
 		3C7E4908A6EC7FF1D3FE68E7 /* MenuBarLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7DA796F7F64C6204532D9A /* MenuBarLabel.swift */; };
 		46DF9C2446AA1505ED4E9560 /* GlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4EB58C0C7CA3E2EBC53FF4 /* GlassBackground.swift */; };
-		47181E9D8B39009F216DDAFF /* CPUSmoothingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2BCDC9D0122C95DF37C5E7 /* CPUSmoothingTests.swift */; };
+		AABB000300000003AABB0003 /* ReapForceKillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABB000400000004AABB0004 /* ReapForceKillTests.swift */; };
 		4755CB7FF08D516827425BED /* ProcessKillerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0669ACC15319BE9FBAB982 /* ProcessKillerTests.swift */; };
 		52CC6BB331CF8A142161A4A1 /* HeatmapGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99089E09A4A3D8EBE4289570 /* HeatmapGridView.swift */; };
 		53F4DAD62EC1451ABC81FF18 /* HeatLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDAA9F3E2F6C38A1222FF24F /* HeatLevel.swift */; };
@@ -38,7 +38,6 @@
 		9883DE79CB938DF90524552E /* UpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33E2B2FF6A3EF7B0F6FBF22 /* UpdaterService.swift */; };
 		A026D9D17BDB7183E583EB09 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 1E2549C4FAF9C7D142A69C48 /* Sparkle */; };
 		A0E2FA0E7AE05FA868044415 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B7C9C1E516BE5583B41E9F37 /* Assets.xcassets */; };
-		AA3C720FB239DD6FE6C62DB7 /* CPUSmoother.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFBC64735FE2365C6BAED4E /* CPUSmoother.swift */; };
 		B1AEDC48F83CEC12DCC3D629 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9687DD60EA6C72B8561235 /* HotkeyManager.swift */; };
 		C3975BB31A63A4CCC5D5FCBC /* MenuBarStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F074C9E28E8931C16696B3C4 /* MenuBarStyle.swift */; };
 		D0F812EA4BFFD741DC247877 /* AppGroupsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB239FF3AC4BB9EF79F8028 /* AppGroupsTests.swift */; };
@@ -76,7 +75,7 @@
 		33445D829F8B7284967778BC /* SystemStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStats.swift; sourceTree = "<group>"; };
 		3D6AF2FCD45AFC0239D726AB /* ProcessGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessGroupView.swift; sourceTree = "<group>"; };
 		41139568030E7AE7502FE8AC /* ProcessRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRowView.swift; sourceTree = "<group>"; };
-		5F2BCDC9D0122C95DF37C5E7 /* CPUSmoothingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUSmoothingTests.swift; sourceTree = "<group>"; };
+		AABB000400000004AABB0004 /* ReapForceKillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReapForceKillTests.swift; sourceTree = "<group>"; };
 		5FB239FF3AC4BB9EF79F8028 /* AppGroupsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupsTests.swift; sourceTree = "<group>"; };
 		6BEDCC43DA0B2E5C7960959C /* TileLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileLayout.swift; sourceTree = "<group>"; };
 		6C3EA78F63C24EB16C60B378 /* Reaper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Reaper.entitlements; sourceTree = "<group>"; };
@@ -85,7 +84,6 @@
 		72A6EBF6C5EBEE11064AC31B /* KillButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillButton.swift; sourceTree = "<group>"; };
 		753E942FEEC266E892DB4DA6 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 		779A6D575110975AD3FFBC2F /* Reaper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reaper.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7DFBC64735FE2365C6BAED4E /* CPUSmoother.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUSmoother.swift; sourceTree = "<group>"; };
 		871515AED850B06EBA1F5CC4 /* ReaperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReaperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D82BD2638571BB0DC4025FD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		94655A4708E1B989846D5851 /* ThreatLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreatLevel.swift; sourceTree = "<group>"; };
@@ -141,13 +139,13 @@
 			isa = PBXGroup;
 			children = (
 				5FB239FF3AC4BB9EF79F8028 /* AppGroupsTests.swift */,
-				5F2BCDC9D0122C95DF37C5E7 /* CPUSmoothingTests.swift */,
 				072E935C9171325788E13173 /* FormattersTests.swift */,
 				C31E9CDCACE252068BE93A33 /* MenuBarRendererTests.swift */,
 				AF5873840E8DF49DABD5AF2B /* MenuBarStyleTests.swift */,
 				F04155E41B89E9D5B30CA78A /* ProcessGroupTests.swift */,
 				71A0A956988368A8DC8DDAF3 /* ProcessInfoTests.swift */,
 				2E0669ACC15319BE9FBAB982 /* ProcessKillerTests.swift */,
+				AABB000400000004AABB0004 /* ReapForceKillTests.swift */,
 				E0945F483AEEDBCF050F3D68 /* SortOrderTests.swift */,
 				2EFF832609E2B79DB4D44F8A /* UpdaterServiceTests.swift */,
 			);
@@ -157,7 +155,6 @@
 		4A677F2DF73FB740322693D6 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				7DFBC64735FE2365C6BAED4E /* CPUSmoother.swift */,
 				DB9687DD60EA6C72B8561235 /* HotkeyManager.swift */,
 				F32CAE203CE1F840C1F9122B /* ProcessKiller.swift */,
 				E8E6F2CFDB4628F6B755CDB9 /* ProcessMonitor.swift */,
@@ -343,7 +340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0F812EA4BFFD741DC247877 /* AppGroupsTests.swift in Sources */,
-				47181E9D8B39009F216DDAFF /* CPUSmoothingTests.swift in Sources */,
+				AABB000300000003AABB0003 /* ReapForceKillTests.swift in Sources */,
 				70FCD9C490782C83B2A6A505 /* FormattersTests.swift in Sources */,
 				30F737B4A95260C38F23D6ED /* MenuBarRendererTests.swift in Sources */,
 				6E27E2D1A74553A4637ACA8A /* MenuBarStyleTests.swift in Sources */,
@@ -359,7 +356,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA3C720FB239DD6FE6C62DB7 /* CPUSmoother.swift in Sources */,
 				70484DB2468B8E7E6DE097A2 /* ContentView.swift in Sources */,
 				8175508D38BD563E08981E9A /* Formatters.swift in Sources */,
 				46DF9C2446AA1505ED4E9560 /* GlassBackground.swift in Sources */,

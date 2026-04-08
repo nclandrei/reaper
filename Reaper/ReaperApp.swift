@@ -1,5 +1,6 @@
 import SwiftUI
 import KeyboardShortcuts
+import ServiceManagement
 
 @main
 struct ReaperApp: App {
@@ -21,7 +22,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @AppStorage("menuBarStyle") var menuBarStyleRaw: String = MenuBarStyle.skull.rawValue
 
+    private let settingsViewModel = SettingsViewModel()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Enable launch at login on first install
+        settingsViewModel.enableLaunchAtLoginOnFirstLaunch()
+
         // Status item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
@@ -34,7 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentSize = NSSize(width: 420, height: 580)
         popover.behavior = .transient
         popover.animates = true
-        popover.contentViewController = NSHostingController(rootView: ContentView(viewModel: viewModel, updaterService: updaterService))
+        popover.contentViewController = NSHostingController(rootView: ContentView(viewModel: viewModel, settingsViewModel: settingsViewModel, updaterService: updaterService))
 
         // Hotkey
         KeyboardShortcuts.reset(.togglePanel)

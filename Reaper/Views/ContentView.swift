@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel: ProcessListViewModel
+    @ObservedObject var settingsViewModel: SettingsViewModel
     @ObservedObject var updaterService: UpdaterService
     @State private var showSettings = false
 
@@ -70,7 +71,7 @@ struct ContentView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .popover(isPresented: $showSettings) {
-                    SettingsView(viewModel: SettingsViewModel(), updaterService: updaterService)
+                    SettingsView(viewModel: settingsViewModel, updaterService: updaterService)
                 }
 
                 Spacer()

@@ -247,6 +247,7 @@ jobs:
             echo "  homepage \"https://github.com/nclandrei/reaper\""
             echo ""
             echo "  depends_on macos: \">= :sonoma\""
+            echo "  conflicts_with cask: \"homebrew/cask/reaper\""
             echo ""
             echo "  app \"Reaper.app\""
             echo ""

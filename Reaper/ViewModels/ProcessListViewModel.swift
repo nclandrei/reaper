@@ -20,6 +20,7 @@ final class ProcessListViewModel: ObservableObject {
     private let monitor = ProcessMonitor()
     private var timer: Timer?
     private let ownPID = getpid()
+    private var cancellables = Set<AnyCancellable>()
 
     @AppStorage("refreshInterval") var refreshInterval: Double = 2.0 {
         didSet { startTimer() }
@@ -27,6 +28,12 @@ final class ProcessListViewModel: ObservableObject {
 
     init() {
         startTimer()
+
+        $searchText
+            .dropFirst()
+            .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in self?.refresh() }
+            .store(in: &cancellables)
     }
 
     deinit {

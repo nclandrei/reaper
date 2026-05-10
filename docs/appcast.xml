@@ -173,5 +173,17 @@
       sparkle:edSignature="ZUVTG4wpXYbxiYUpkzowwcRuSEH+ysQPsSxte6z+YvXb+Pt/H/HhM24tI98wQPdeXXw42H9R1aaXQbX1C0jBAA=="
     />
   </item>
+      <item>
+    <title>Reaper v20260510.184631</title>
+    <pubDate>Sun, 10 May 2026 18:49:02 +0000</pubDate>
+    <sparkle:version>20260510.184631</sparkle:version>
+    <sparkle:shortVersionString>1.0.4</sparkle:shortVersionString>
+    <enclosure
+      url="https://github.com/nclandrei/reaper/releases/download/v20260510.184631/Reaper.zip"
+      length="2518511"
+      type="application/octet-stream"
+      sparkle:edSignature="6lFju1NgarzLqsRqeZs2SPiaXGk5kn7Ii91SwrFjlNRomUr35WXf140M2fVvihplv1esPmnr6p7ZPkmlkAPLBA=="
+    />
+  </item>
   </channel>
 </rss>
